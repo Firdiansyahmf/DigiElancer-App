@@ -5,6 +5,7 @@
 package digielancer.main;
 
 import digielancer.component.ProjectList;
+import digielancer.component.settingList;
 
 /**
  *
@@ -211,6 +212,8 @@ public class Navbar extends javax.swing.JFrame {
     private void jButtonSettingsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSettingsActionPerformed
         // TODO add your handling code here:
         setActiveMenu(jButtonSettings);
+        
+        switchContent(new settingList());
     }//GEN-LAST:event_jButtonSettingsActionPerformed
 
     private void jButtonLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogoutActionPerformed
