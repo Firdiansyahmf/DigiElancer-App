@@ -4,6 +4,7 @@
  */
 package digielancer.main;
 
+import digielancer.component.MenuInvoice;
 import digielancer.component.ProjectList;
 
 /**
@@ -205,7 +206,9 @@ public class Navbar extends javax.swing.JFrame {
 
     private void jButtonInvoicesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonInvoicesActionPerformed
         // TODO add your handling code here:
+        
         setActiveMenu(jButtonInvoices);
+        switchContent(new MenuInvoice());
     }//GEN-LAST:event_jButtonInvoicesActionPerformed
 
     private void jButtonSettingsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSettingsActionPerformed
