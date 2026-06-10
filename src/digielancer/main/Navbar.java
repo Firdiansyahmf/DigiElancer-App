@@ -4,6 +4,7 @@
  */
 package digielancer.main;
 
+import digielancer.component.Dashboard;
 import digielancer.component.ProjectList;
 
 /**
@@ -194,6 +195,8 @@ public class Navbar extends javax.swing.JFrame {
     private void jButtonDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDashboardActionPerformed
         // TODO add your handling code here:
         setActiveMenu(jButtonDashboard); 
+        
+        switchContent(new Dashboard());
     }//GEN-LAST:event_jButtonDashboardActionPerformed
 
     private void jButtonProjectsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonProjectsActionPerformed
