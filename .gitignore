@@ -1,0 +1,10 @@
+build/
+dist/
+*.class
+
+nbproject/private/
+nbproject/project.xml.user
+build.xml.data
+
+*.log
+*.sqlite
