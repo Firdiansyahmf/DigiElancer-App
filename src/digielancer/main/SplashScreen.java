@@ -93,7 +93,7 @@ public class SplashScreen extends JFrame {
                 this.dispose();
                 
                 java.awt.EventQueue.invokeLater(() -> {
-                    new Navbar().setVisible(true);
+                    new LoginScreen().setVisible(true);
                 });
                 
             } catch (InterruptedException e) {
