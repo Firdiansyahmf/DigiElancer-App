@@ -13,16 +13,18 @@ import java.lang.Runnable;
 public class DigiElancer {
     public static void main(String[] args) {
         
-        // Optional: Test your database connection immediately on startup
-        // DBConnection.getConnection();
+        // look feell
+        try {
+            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         
-        // Launch the UI safely
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // Open the master dashboard
-                new Navbar().setVisible(true);
-            }
+        // splashh
+        java.awt.EventQueue.invokeLater(() -> {
+            SplashScreen splash = new SplashScreen();
+            splash.setVisible(true);
+            splash.startLoading();
         });
     }
 }
