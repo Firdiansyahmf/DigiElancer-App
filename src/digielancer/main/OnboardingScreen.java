@@ -32,7 +32,7 @@ public class OnboardingScreen extends JFrame {
 
     public OnboardingScreen() {
         setTitle("Digi Elancer - Mulai Perjalanan Freelance Anda");
-        setSize(1050, 750);
+        setSize(1280, 832);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
@@ -572,12 +572,13 @@ public class OnboardingScreen extends JFrame {
         logo.setForeground(Color.WHITE);
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel imgPlaceholder = new JLabel("🚀", SwingConstants.CENTER);
-        imgPlaceholder.setFont(new Font("Inter", Font.PLAIN, 120));
+        // rokett
+        java.net.URL imgURL = getClass().getResource("/digielancer/assets/roket.png");
+        JLabel imgPlaceholder = new JLabel(new ImageIcon(imgURL));
         imgPlaceholder.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+                
         left.add(logo);
-        left.add(Box.createRigidArea(new Dimension(0, 30)));
+        left.add(Box.createRigidArea(new Dimension(0, 50)));
         left.add(imgPlaceholder);
         left.add(Box.createVerticalGlue());
         
