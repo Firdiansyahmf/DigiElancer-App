@@ -12,7 +12,7 @@ public class LoginScreen extends JFrame {
 
     public LoginScreen() {
         setTitle("Digi Elancer - Login");
-        setSize(900, 600);
+        setSize(1280, 832);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); 
         setLayout(new GridLayout(1, 2)); 
@@ -37,12 +37,11 @@ public class LoginScreen extends JFrame {
         innerLeft.setLayout(new BoxLayout(innerLeft, BoxLayout.Y_AXIS));
         innerLeft.setOpaque(false);
 
-        JLabel logoLabel = new JLabel(" DE ");
-        logoLabel.setFont(new Font("Inter", Font.BOLD, 50));
-        logoLabel.setForeground(new Color(15, 118, 206));
-        logoLabel.setOpaque(true);
-        logoLabel.setBackground(Color.WHITE);
-        logoLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        // logoo
+        java.net.URL imgURL = getClass().getResource("/digielancer/assets/logo.png");
+        ImageIcon icon = new ImageIcon(imgURL);
+        Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(img));
         logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel title = new JLabel("Digi Elancer");
@@ -55,7 +54,7 @@ public class LoginScreen extends JFrame {
         subtitle.setForeground(new Color(148, 163, 184));
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel desc = new JLabel("<html><div style='text-align: center; width: 350px;'>Sistem manajemen siklus kerja freelancer dengan otomatisasi nota yang powerful dan mudah digunakan</div></html>");
+        JLabel desc = new JLabel("<html><div style='text-align: center; width: 250px;'>Sistem manajemen siklus kerja freelancer dengan otomatisasi nota yang powerful dan mudah digunakan</div></html>");
         desc.setFont(new Font("Inter", Font.PLAIN, 13));
         desc.setForeground(new Color(203, 213, 225));
         desc.setAlignmentX(Component.CENTER_ALIGNMENT);

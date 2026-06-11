@@ -10,24 +10,28 @@ public class SplashScreen extends JFrame {
     
     public SplashScreen() {
         setUndecorated(true);
-        setSize(800, 500);
+        setSize(1280, 832);
         setLocationRelativeTo(null);
+        
         getContentPane().setBackground(new Color(248, 250, 252));
         setLayout(new BorderLayout());
+
+        // centerr
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setOpaque(false);
 
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 0));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
 
         // logoo
-        // ImageIcon icon = new ImageIcon(getClass().getResource("/digielancer/assets/logo.png"));
-        // JLabel logoLabel = new JLabel(icon);
-        JLabel logoLabel = new JLabel("DE");
-        logoLabel.setFont(new Font("Inter", Font.BOLD, 48));
-        logoLabel.setForeground(new Color(15, 118, 206));
+        java.net.URL imgURL = getClass().getResource("/digielancer/assets/logo.png");
+        ImageIcon icon = new ImageIcon(imgURL);
+        Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(img));
         logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
+        
         // titlee
         JLabel titleLabel = new JLabel("Digi Elancer");
         titleLabel.setFont(new Font("Inter", Font.BOLD, 28));
@@ -65,6 +69,9 @@ public class SplashScreen extends JFrame {
         centerPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         centerPanel.add(loadingText);
 
+        // usee center
+        centerWrapper.add(centerPanel);
+
         // footerr
         JPanel footerPanel = new JPanel();
         footerPanel.setOpaque(false);
@@ -75,7 +82,7 @@ public class SplashScreen extends JFrame {
         footerText.setForeground(new Color(148, 163, 184));
         footerPanel.add(footerText);
 
-        add(centerPanel, BorderLayout.CENTER);
+        add(centerWrapper, BorderLayout.CENTER);
         add(footerPanel, BorderLayout.SOUTH);
     }
     
@@ -113,5 +120,5 @@ public class SplashScreen extends JFrame {
             splash.setVisible(true);
             splash.startLoading();
         });
-    }                 
+    }                  
 }
