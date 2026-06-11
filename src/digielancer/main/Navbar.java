@@ -8,8 +8,12 @@ package digielancer.main;
 import digielancer.component.Dashboard;
 import digielancer.component.MenuInvoice;
 import digielancer.component.ProjectList;
+<<<<<<< HEAD
 import digielancer.component.settingList;
 
+=======
+import javax.swing.ImageIcon;
+>>>>>>> firdi
 /**
  *
  * @author ASUS
@@ -24,7 +28,26 @@ public class Navbar extends javax.swing.JFrame {
     public Navbar() {
         initComponents();
         
+        // faviconn
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
+        
+        // sessionn login
+        if (UserSession.getBusinessName() != null) {
+            jLabel4.setText(UserSession.getBusinessName());
+            jLabel3.setText(UserSession.getEmail());
+        }
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    }
+    
+    public class MyForm extends javax.swing.JFrame {
+        public MyForm() {
+            initComponents();
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/favicon-64.png"));
+            this.setIconImage(icon.getImage());
+        }
     }
 
     /**
@@ -224,7 +247,16 @@ public class Navbar extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonSettingsActionPerformed
 
     private void jButtonLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogoutActionPerformed
-        // TODO add your handling code here:
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+                "Apakah Anda yakin ingin keluar?", "Konfirmasi Logout",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+            UserSession.clearSession();
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> {
+                new LoginScreen().setVisible(true);
+            });
+        }
     }//GEN-LAST:event_jButtonLogoutActionPerformed
 
     /**

@@ -12,10 +12,15 @@ public class LoginScreen extends JFrame {
 
     public LoginScreen() {
         setTitle("Digi Elancer - Login");
-        setSize(900, 600);
+        setSize(1280, 832);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); 
         setLayout(new GridLayout(1, 2)); 
+        
+        // favicon
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
 
         // kirii
         JPanel leftPanel = new JPanel(new GridBagLayout()) { 
@@ -37,12 +42,11 @@ public class LoginScreen extends JFrame {
         innerLeft.setLayout(new BoxLayout(innerLeft, BoxLayout.Y_AXIS));
         innerLeft.setOpaque(false);
 
-        JLabel logoLabel = new JLabel(" DE ");
-        logoLabel.setFont(new Font("Inter", Font.BOLD, 50));
-        logoLabel.setForeground(new Color(15, 118, 206));
-        logoLabel.setOpaque(true);
-        logoLabel.setBackground(Color.WHITE);
-        logoLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        // logoo
+        java.net.URL imgURL = getClass().getResource("/digielancer/assets/logo.png");
+        ImageIcon icon = new ImageIcon(imgURL);
+        Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(img));
         logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel title = new JLabel("Digi Elancer");
@@ -55,7 +59,7 @@ public class LoginScreen extends JFrame {
         subtitle.setForeground(new Color(148, 163, 184));
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel desc = new JLabel("<html><div style='text-align: center; width: 350px;'>Sistem manajemen siklus kerja freelancer dengan otomatisasi nota yang powerful dan mudah digunakan</div></html>");
+        JLabel desc = new JLabel("<html><div style='text-align: center; width: 250px;'>Sistem manajemen siklus kerja freelancer dengan otomatisasi nota yang powerful dan mudah digunakan</div></html>");
         desc.setFont(new Font("Inter", Font.PLAIN, 13));
         desc.setForeground(new Color(203, 213, 225));
         desc.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -146,6 +150,12 @@ public class LoginScreen extends JFrame {
                 ResultSet rs = pst.executeQuery();
 
                 if (rs.next()) {
+                    UserSession.setSession(
+                        rs.getInt("id"), 
+                        rs.getString("business_name"), 
+                        rs.getString("email")
+                    );
+                    
                     JOptionPane.showMessageDialog(this, "Berhasil Login! Selamat Datang " + rs.getString("business_name"));
                     this.dispose(); 
                     java.awt.EventQueue.invokeLater(() -> {
@@ -172,7 +182,13 @@ public class LoginScreen extends JFrame {
         registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         registerBtn.setMaximumSize(new Dimension(350, 40));
         registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT); 
-
+        registerBtn.addActionListener(e -> {
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> {
+                new OnboardingScreen().setVisible(true);
+            });
+        });
+        
         formContainer.add(welcomeTitle);
         formContainer.add(Box.createRigidArea(new Dimension(0, 5)));
         formContainer.add(welcomeSub);
