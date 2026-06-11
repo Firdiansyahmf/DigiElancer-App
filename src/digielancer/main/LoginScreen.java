@@ -146,6 +146,12 @@ public class LoginScreen extends JFrame {
                 ResultSet rs = pst.executeQuery();
 
                 if (rs.next()) {
+                    UserSession.setSession(
+                        rs.getInt("id"), 
+                        rs.getString("business_name"), 
+                        rs.getString("email")
+                    );
+                    
                     JOptionPane.showMessageDialog(this, "Berhasil Login! Selamat Datang " + rs.getString("business_name"));
                     this.dispose(); 
                     java.awt.EventQueue.invokeLater(() -> {
@@ -172,7 +178,13 @@ public class LoginScreen extends JFrame {
         registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         registerBtn.setMaximumSize(new Dimension(350, 40));
         registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT); 
-
+        registerBtn.addActionListener(e -> {
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> {
+                new OnboardingScreen().setVisible(true);
+            });
+        });
+        
         formContainer.add(welcomeTitle);
         formContainer.add(Box.createRigidArea(new Dimension(0, 5)));
         formContainer.add(welcomeSub);
