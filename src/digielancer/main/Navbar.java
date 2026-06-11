@@ -24,6 +24,12 @@ public class Navbar extends javax.swing.JFrame {
     public Navbar() {
         initComponents();
         
+        // sessionn login
+        if (UserSession.getBusinessName() != null) {
+            jLabel4.setText(UserSession.getBusinessName());
+            jLabel3.setText(UserSession.getEmail());
+        }
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
     }
 
@@ -224,7 +230,16 @@ public class Navbar extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonSettingsActionPerformed
 
     private void jButtonLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogoutActionPerformed
-        // TODO add your handling code here:
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+                "Apakah Anda yakin ingin keluar?", "Konfirmasi Logout",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+            UserSession.clearSession();
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> {
+                new LoginScreen().setVisible(true);
+            });
+        }
     }//GEN-LAST:event_jButtonLogoutActionPerformed
 
     /**
