@@ -13,6 +13,11 @@ public class SplashScreen extends JFrame {
         setSize(1280, 832);
         setLocationRelativeTo(null);
         
+        // favicon
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
+        
         getContentPane().setBackground(new Color(248, 250, 252));
         setLayout(new BorderLayout());
 
