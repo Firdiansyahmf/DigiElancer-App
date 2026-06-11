@@ -32,6 +32,8 @@ public class MenuInvoice extends javax.swing.JPanel {
         jLabel2 = new javax.swing.JLabel();
         jButtonNota = new javax.swing.JButton();
         jButtonHistory = new javax.swing.JButton();
+        jButtonHistory.addActionListener(this::jButtonHistoryActionPerformed);
+
         InvoiceMenu = new javax.swing.JPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -93,6 +95,11 @@ public class MenuInvoice extends javax.swing.JPanel {
         switchContent(new InvoicePanel());
     }//GEN-LAST:event_jButtonNotaActionPerformed
 
+    private void jButtonHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonHistoryActionPerformed
+        switchContent(new HistoryInvoicePanel());
+    }//GEN-LAST:event_jButtonHistoryActionPerformed
+
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel InvoiceMenu;
@@ -106,6 +113,7 @@ public class MenuInvoice extends javax.swing.JPanel {
 public void switchContent(javax.swing.JPanel panel) {
         // 1. Remove everything currently in the main container
         InvoiceMenu.removeAll();
+
 
         // 2. Add the new panel to the center
         InvoiceMenu.add(panel, java.awt.BorderLayout.CENTER);
