@@ -36,6 +36,11 @@ public class OnboardingScreen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
+        // favicon
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
+        
         setLayout(new GridBagLayout()); 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH; 

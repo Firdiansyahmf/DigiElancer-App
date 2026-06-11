@@ -16,6 +16,11 @@ public class LoginScreen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); 
         setLayout(new GridLayout(1, 2)); 
+        
+        // favicon
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
 
         // kirii
         JPanel leftPanel = new JPanel(new GridBagLayout()) { 

@@ -6,7 +6,7 @@ package digielancer.main;
 
 import digielancer.component.Dashboard;
 import digielancer.component.ProjectList;
-
+import javax.swing.ImageIcon;
 /**
  *
  * @author ASUS
@@ -21,6 +21,11 @@ public class Navbar extends javax.swing.JFrame {
     public Navbar() {
         initComponents();
         
+        // faviconn
+        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+        ImageIcon appIcon = new ImageIcon(iconURL);
+        setIconImage(appIcon.getImage());
+        
         // sessionn login
         if (UserSession.getBusinessName() != null) {
             jLabel4.setText(UserSession.getBusinessName());
@@ -28,6 +33,14 @@ public class Navbar extends javax.swing.JFrame {
         }
         
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    }
+    
+    public class MyForm extends javax.swing.JFrame {
+        public MyForm() {
+            initComponents();
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/favicon-64.png"));
+            this.setIconImage(icon.getImage());
+        }
     }
 
     /**
