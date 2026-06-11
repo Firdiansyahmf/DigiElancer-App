@@ -7,6 +7,8 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+// dialogg
+import digielancer.component.PriceDialog;
 
 public class OnboardingScreen extends JFrame {
 
@@ -37,9 +39,13 @@ public class OnboardingScreen extends JFrame {
         setLocationRelativeTo(null);
         
         // favicon
-        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
-        ImageIcon appIcon = new ImageIcon(iconURL);
-        setIconImage(appIcon.getImage());
+        try {
+            java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+            if(iconURL != null) {
+                ImageIcon appIcon = new ImageIcon(iconURL);
+                setIconImage(appIcon.getImage());
+            }
+        } catch(Exception ignored){}
         
         setLayout(new GridBagLayout()); 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -281,22 +287,15 @@ public class OnboardingScreen extends JFrame {
 
         btn.addActionListener(e -> {
             if (btn.isSelected()) {
-                String priceStr = JOptionPane.showInputDialog(this, "Masukkan Tarif Dasar (Rp) untuk:\n" + skillName, "Tarif Dasar", JOptionPane.QUESTION_MESSAGE);
-                try {
-                    if (priceStr != null && !priceStr.trim().isEmpty()) {
-                        String cleanPrice = priceStr.replaceAll("[^\\d]", "");
-                        if(cleanPrice.isEmpty()) throw new NumberFormatException();
-                        
-                        double basePrice = Double.parseDouble(cleanPrice);
-                        selectedServices.add(new ServiceData(skillName, basePrice));
-                        btn.setBackground(new Color(14, 165, 233));
-                        btn.setForeground(Color.WHITE);
-                    } else {
-                        btn.setSelected(false); 
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Harap masukkan angka yang valid!", "Error", JOptionPane.ERROR_MESSAGE);
-                    btn.setSelected(false);
+                PriceDialog dialog = new PriceDialog(this, skillName);
+                dialog.setVisible(true);  
+                Double priceResult = dialog.getPrice();
+                if (priceResult != null) {
+                    selectedServices.add(new ServiceData(skillName, priceResult));
+                    btn.setBackground(new Color(14, 165, 233));
+                    btn.setForeground(Color.WHITE);
+                } else {
+                    btn.setSelected(false); 
                 }
             } else {
                 selectedServices.removeIf(s -> s.name.equals(skillName));
@@ -578,13 +577,21 @@ public class OnboardingScreen extends JFrame {
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // rokett
-        java.net.URL imgURL = getClass().getResource("/digielancer/assets/roket.png");
-        JLabel imgPlaceholder = new JLabel(new ImageIcon(imgURL));
-        imgPlaceholder.setAlignmentX(Component.CENTER_ALIGNMENT);
-                
-        left.add(logo);
-        left.add(Box.createRigidArea(new Dimension(0, 50)));
-        left.add(imgPlaceholder);
+        try {
+            java.net.URL imgURL = getClass().getResource("/digielancer/assets/roket.png");
+            if(imgURL != null) {
+                JLabel imgPlaceholder = new JLabel(new ImageIcon(imgURL));
+                imgPlaceholder.setAlignmentX(Component.CENTER_ALIGNMENT);
+                left.add(logo);
+                left.add(Box.createRigidArea(new Dimension(0, 50)));
+                left.add(imgPlaceholder);
+            } else {
+                left.add(logo);
+            }
+        } catch(Exception e) {
+            left.add(logo);
+        }
+        
         left.add(Box.createVerticalGlue());
         
         left.add(createInfoCard("🛡️", "Keamanan Terjamin", "Data Anda aman bersama kami"));
@@ -723,7 +730,7 @@ public class OnboardingScreen extends JFrame {
         double price;
         public AddOnData(String n, double p) { this.name = n; this.price = p; }
     }
-
+    
     public static void main(String[] args) {
         java.awt.EventQueue.invokeLater(() -> new OnboardingScreen().setVisible(true));
     }

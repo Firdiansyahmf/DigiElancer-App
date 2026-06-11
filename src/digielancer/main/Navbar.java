@@ -8,12 +8,9 @@ package digielancer.main;
 import digielancer.component.Dashboard;
 import digielancer.component.MenuInvoice;
 import digielancer.component.ProjectList;
-<<<<<<< HEAD
 import digielancer.component.settingList;
-
-=======
 import javax.swing.ImageIcon;
->>>>>>> firdi
+
 /**
  *
  * @author ASUS
