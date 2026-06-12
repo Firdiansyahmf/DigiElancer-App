@@ -3,15 +3,39 @@ package digielancer.component;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.*;
 import java.util.*;
+import java.util.List;
 
 public class InvoicePanel extends javax.swing.JPanel {
 
-    private JComboBox<String> cbProject;
+    // Helper class for dynamic project data
+    private static class ProjectData {
+        int id;
+        String clientName;
+        String serviceName;
+        double basePrice;
+        int serviceId;
+        
+        public ProjectData(int id, String clientName, String serviceName, double basePrice, int serviceId) {
+            this.id = id;
+            this.clientName = clientName;
+            this.serviceName = serviceName;
+            this.basePrice = basePrice;
+            this.serviceId = serviceId;
+        }
+        
+        @Override
+        public String toString() {
+            return clientName + " - " + serviceName;
+        }
+    }
+
+    private JComboBox<ProjectData> cbProject;
     private JTextField tfNotaNumber;
-    private AddOnRow rowMobileDB;
-    private AddOnRow rowMobileAI;
-    private AddOnRow rowAPIntegration;
+    private List<ProjectData> loadedProjects = new ArrayList<>();
+    private List<AddOnRow> activeAddOnRows = new ArrayList<>();
+    private RoundedPanel addOnsCard;
     private ToggleSwitch tsShowLogo;
 
     private JPanel logoSection;
@@ -33,11 +57,108 @@ public class InvoicePanel extends javax.swing.JPanel {
         setupModernUI();
     }
 
+    private void loadProjects() {
+        loadedProjects.clear();
+        int currentUserId = digielancer.main.UserSession.getId();
+        try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+            String sql = "SELECT p.id, p.client_name, ms.service_name, ms.base_price, ms.id AS service_id " +
+                         "FROM project p " +
+                         "JOIN main_service ms ON p.main_service_id = ms.id " +
+                         "WHERE p.user_id = ?";
+            try (PreparedStatement pst = conn.prepareStatement(sql)) {
+                pst.setInt(1, currentUserId);
+                try (ResultSet rs = pst.executeQuery()) {
+                    while (rs.next()) {
+                        loadedProjects.add(new ProjectData(
+                            rs.getInt("id"),
+                            rs.getString("client_name"),
+                            rs.getString("service_name"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("service_id")
+                        ));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Gagal memuat projek: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void loadAddOnsForSelectedProject() {
+        activeAddOnRows.clear();
+        ProjectData selectedProj = (ProjectData) cbProject.getSelectedItem();
+        if (selectedProj == null) {
+            return;
+        }
+
+        try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+            String sql = "SELECT id, addon_name, price FROM add_on WHERE main_service_id = ?";
+            try (PreparedStatement pst = conn.prepareStatement(sql)) {
+                pst.setInt(1, selectedProj.serviceId);
+                try (ResultSet rs = pst.executeQuery()) {
+                    while (rs.next()) {
+                        int addonId = rs.getInt("id");
+                        String name = rs.getString("addon_name");
+                        double price = rs.getDouble("price");
+                        
+                        java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(new java.util.Locale("in", "ID"));
+                        String priceFormatted = "Rp " + nf.format(price);
+                        
+                        AddOnRow row = new AddOnRow(addonId, name, priceFormatted, price, false, this::updateInvoicePreview);
+                        activeAddOnRows.add(row);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Gagal memuat add-on: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void rebuildAddOnsCard() {
+        if (addOnsCard == null) return;
+        
+        addOnsCard.removeAll();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Header Title
+        JLabel cardTitle = new JLabel("Pilih Add-ons");
+        cardTitle.setFont(getModernFont(Font.BOLD, 14));
+        cardTitle.setForeground(new Color(15, 23, 42));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 16, 0);
+        addOnsCard.add(cardTitle, gbc);
+
+        int gridy = 1;
+        for (AddOnRow row : activeAddOnRows) {
+            gbc.gridy = gridy++;
+            gbc.insets = new Insets(0, 0, 12, 0);
+            addOnsCard.add(row, gbc);
+        }
+
+        if (activeAddOnRows.isEmpty()) {
+            JLabel lblNoAddOns = new JLabel("Tidak ada add-on untuk projek ini");
+            lblNoAddOns.setFont(getModernFont(Font.PLAIN, 12));
+            lblNoAddOns.setForeground(new Color(148, 163, 184));
+            gbc.gridy = gridy++;
+            gbc.insets = new Insets(0, 0, 0, 0);
+            addOnsCard.add(lblNoAddOns, gbc);
+        }
+
+        addOnsCard.revalidate();
+        addOnsCard.repaint();
+    }
+
     /**
      * Rebuild the UI programmatically to match the visual standard of HistoryInvoicePanel
      * and the reference design in nota.png with a fully responsive layout.
      */
     private void setupModernUI() {
+        loadProjects();
         removeAll();
         setLayout(new BorderLayout());
         setBackground(new Color(248, 250, 252));
@@ -98,6 +219,11 @@ public class InvoicePanel extends javax.swing.JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         // Populate initial calculations
+        if (cbProject != null && cbProject.getItemCount() > 0) {
+            cbProject.setSelectedIndex(0);
+            loadAddOnsForSelectedProject();
+            rebuildAddOnsCard();
+        }
         updateInvoicePreview();
 
         revalidate();
@@ -213,11 +339,18 @@ public class InvoicePanel extends javax.swing.JPanel {
         card.add(lblProject, gbc);
 
         // Project Dropdown
-        cbProject = new JComboBox<>(new String[] { "Cahya Motion", "Creative Studio", "Ansyah Creative" });
+        cbProject = new JComboBox<>();
+        for (ProjectData proj : loadedProjects) {
+            cbProject.addItem(proj);
+        }
         cbProject.setFont(getModernFont(Font.PLAIN, 13));
         cbProject.setPreferredSize(new Dimension(cbProject.getPreferredSize().width, 42));
         cbProject.setBackground(Color.WHITE);
-        cbProject.addActionListener(e -> updateInvoicePreview());
+        cbProject.addActionListener(e -> {
+            loadAddOnsForSelectedProject();
+            rebuildAddOnsCard();
+            updateInvoicePreview();
+        });
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 0, 16, 0);
         card.add(cbProject, gbc);
@@ -252,41 +385,10 @@ public class InvoicePanel extends javax.swing.JPanel {
     }
 
     private JPanel createAddOnsCard() {
-        RoundedPanel card = new RoundedPanel(16);
-        card.setLayout(new GridBagLayout());
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        // Header Title
-        JLabel cardTitle = new JLabel("Pilih Add-ons");
-        cardTitle.setFont(getModernFont(Font.BOLD, 14));
-        cardTitle.setForeground(new Color(15, 23, 42));
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 16, 0);
-        card.add(cardTitle, gbc);
-
-        // Add-on 1: Mobile with DB
-        rowMobileDB = new AddOnRow("Mobile with DB", "Rp 5.000.000", true, this::updateInvoicePreview);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 12, 0);
-        card.add(rowMobileDB, gbc);
-
-        // Add-on 2: Mobile with AI
-        rowMobileAI = new AddOnRow("Mobile with AI", "Rp 7.500.000", false, this::updateInvoicePreview);
-        gbc.gridy = 2;
-        gbc.insets = new Insets(0, 0, 12, 0);
-        card.add(rowMobileAI, gbc);
-
-        // Add-on 3: APIntegration
-        rowAPIntegration = new AddOnRow("APIntegration", "Rp 3.000.000", true, this::updateInvoicePreview);
-        gbc.gridy = 3;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        card.add(rowAPIntegration, gbc);
-
-        return card;
+        addOnsCard = new RoundedPanel(16);
+        addOnsCard.setLayout(new GridBagLayout());
+        rebuildAddOnsCard();
+        return addOnsCard;
     }
 
     private JPanel createOpsiTampilanCard() {
@@ -365,11 +467,112 @@ public class InvoicePanel extends javax.swing.JPanel {
         };
         btnGenerate.setBorder(BorderFactory.createEmptyBorder(12, 40, 12, 16));
         btnGenerate.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, 
-                "Nota berhasil digenerate dan diexport!\n" +
-                "File: " + tfNotaNumber.getText() + ".pdf", 
-                "Export Berhasil", 
-                JOptionPane.INFORMATION_MESSAGE);
+            ProjectData selectedProj = (ProjectData) cbProject.getSelectedItem();
+            if (selectedProj == null) {
+                JOptionPane.showMessageDialog(this, "Silakan pilih projek terlebih dahulu!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String invNumber = tfNotaNumber.getText().trim();
+            if (invNumber.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Nomor nota tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+                // Check if invoice number is duplicate
+                String checkSql = "SELECT COUNT(*) FROM invoice WHERE invoice_number = ?";
+                try (PreparedStatement pstCheck = conn.prepareStatement(checkSql)) {
+                    pstCheck.setString(1, invNumber);
+                    try (ResultSet rsCheck = pstCheck.executeQuery()) {
+                        if (rsCheck.next() && rsCheck.getInt(1) > 0) {
+                            JOptionPane.showMessageDialog(this, "Nomor nota '" + invNumber + "' sudah terdaftar!\nSilakan gunakan nomor nota lain.", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+
+                // Begin Transaction
+                conn.setAutoCommit(false);
+                
+                // Calculate total and gather items
+                double total = selectedProj.basePrice;
+                List<String> descList = new ArrayList<>();
+                List<Double> priceList = new ArrayList<>();
+                
+                descList.add(selectedProj.serviceName + " (Base Service)");
+                priceList.add(selectedProj.basePrice);
+
+                for (AddOnRow row : activeAddOnRows) {
+                    if (row.isSelected()) {
+                        descList.add(row.getAddonName() + " (Add-on)");
+                        priceList.add(row.getPrice());
+                        total += row.getPrice();
+                    }
+                }
+
+                String templateStyle = tsShowLogo.isSelected() ? "Logo" : "PlainText";
+                String insertInvoiceSql = "INSERT INTO invoice (project_id, invoice_number, total_amount, status, template_style) VALUES (?, ?, ?, 'Pending', ?)";
+                
+                int generatedInvoiceId = 0;
+                try (PreparedStatement pstInv = conn.prepareStatement(insertInvoiceSql, Statement.RETURN_GENERATED_KEYS)) {
+                    pstInv.setInt(1, selectedProj.id);
+                    pstInv.setString(2, invNumber);
+                    pstInv.setDouble(3, total);
+                    pstInv.setString(4, templateStyle);
+                    pstInv.executeUpdate();
+                    
+                    try (ResultSet rsKeys = pstInv.getGeneratedKeys()) {
+                        if (rsKeys.next()) {
+                            generatedInvoiceId = rsKeys.getInt(1);
+                        }
+                    }
+                }
+
+                if (generatedInvoiceId == 0) {
+                    throw new SQLException("Gagal mendapatkan ID invoice baru.");
+                }
+
+                String insertItemSql = "INSERT INTO invoice_item (invoice_id, item_description, snapshot_price) VALUES (?, ?, ?)";
+                try (PreparedStatement pstItem = conn.prepareStatement(insertItemSql)) {
+                    for (int i = 0; i < descList.size(); i++) {
+                        pstItem.setInt(1, generatedInvoiceId);
+                        pstItem.setString(2, descList.get(i));
+                        pstItem.setDouble(3, priceList.get(i));
+                        pstItem.addBatch();
+                    }
+                    pstItem.executeBatch();
+                }
+
+                conn.commit();
+
+                // Switch to InvoiceReceiptPanel
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy", new java.util.Locale("id", "ID"));
+                String formattedDate = sdf.format(new java.util.Date());
+                
+                final String finalInvNum = invNumber;
+                final double finalTotal = total;
+                
+                java.awt.Container parent = this.getParent();
+                while (parent != null && !(parent instanceof MenuInvoice)) {
+                    parent = parent.getParent();
+                }
+                if (parent instanceof MenuInvoice) {
+                    MenuInvoice menuInvoice = (MenuInvoice) parent;
+                    menuInvoice.switchContent(new InvoiceReceiptPanel(
+                        finalInvNum, 
+                        selectedProj.clientName, 
+                        selectedProj.serviceName, 
+                        finalTotal, 
+                        descList, 
+                        priceList, 
+                        formattedDate
+                    ));
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Gagal membuat invoice: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         gbc.gridy = 0;
@@ -612,22 +815,27 @@ public class InvoicePanel extends javax.swing.JPanel {
     }
 
     private void updateInvoicePreview() {
+        ProjectData selectedProj = (ProjectData) cbProject.getSelectedItem();
+        if (selectedProj == null) {
+            if (lblPreviewProjectName != null) lblPreviewProjectName.setText("Nama Project");
+            if (lblPreviewClientName != null) lblPreviewClientName.setText("Nama Klien");
+            if (lblPreviewInvoiceId != null) lblPreviewInvoiceId.setText("INV-xxxx");
+            if (lblPreviewTotal != null) lblPreviewTotal.setText("Rp 0");
+            if (itemsPreviewContainer != null) {
+                itemsPreviewContainer.removeAll();
+                itemsPreviewContainer.revalidate();
+                itemsPreviewContainer.repaint();
+            }
+            return;
+        }
+
         // 1. Update Project Label & Client Name
-        String selectedProject = cbProject != null ? (String) cbProject.getSelectedItem() : "Cahya Motion";
         if (lblPreviewProjectName != null) {
-            lblPreviewProjectName.setText(selectedProject);
+            lblPreviewProjectName.setText(selectedProj.serviceName);
         }
         
         if (lblPreviewClientName != null) {
-            if ("Cahya Motion".equals(selectedProject)) {
-                lblPreviewClientName.setText("Cahya Client");
-            } else if ("Creative Studio".equals(selectedProject)) {
-                lblPreviewClientName.setText("Creative Studio Client");
-            } else if ("Ansyah Creative".equals(selectedProject)) {
-                lblPreviewClientName.setText("Ansyah Creative Client");
-            } else {
-                lblPreviewClientName.setText("Nama Klien");
-            }
+            lblPreviewClientName.setText(selectedProj.clientName);
         }
 
         // 2. Update Invoice ID Label
@@ -640,31 +848,27 @@ public class InvoicePanel extends javax.swing.JPanel {
             }
         }
 
-        // 3. Update Dynamic Add-ons List & Calculate Total
+        // 3. Update Dynamic Items List & Calculate Total
         if (itemsPreviewContainer != null) {
             itemsPreviewContainer.removeAll();
-            long totalAmount = 0;
+            double totalAmount = 0;
+            java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(new java.util.Locale("in", "ID"));
 
-            if (rowMobileDB != null && rowMobileDB.isSelected()) {
-                itemsPreviewContainer.add(createPreviewItemRow("Mobile with DB", "Rp 5.000.000"));
-                itemsPreviewContainer.add(Box.createRigidArea(new Dimension(0, 6)));
-                totalAmount += 5000000;
-            }
+            // Add Base Service
+            itemsPreviewContainer.add(createPreviewItemRow(selectedProj.serviceName + " (Base Service)", "Rp " + nf.format(selectedProj.basePrice)));
+            itemsPreviewContainer.add(Box.createRigidArea(new Dimension(0, 6)));
+            totalAmount += selectedProj.basePrice;
 
-            if (rowMobileAI != null && rowMobileAI.isSelected()) {
-                itemsPreviewContainer.add(createPreviewItemRow("Mobile with AI", "Rp 7.500.000"));
-                itemsPreviewContainer.add(Box.createRigidArea(new Dimension(0, 6)));
-                totalAmount += 7500000;
-            }
-
-            if (rowAPIntegration != null && rowAPIntegration.isSelected()) {
-                itemsPreviewContainer.add(createPreviewItemRow("API Integration", "Rp 3.000.000"));
-                itemsPreviewContainer.add(Box.createRigidArea(new Dimension(0, 6)));
-                totalAmount += 3000000;
+            // Add Checked Add-ons
+            for (AddOnRow row : activeAddOnRows) {
+                if (row.isSelected()) {
+                    itemsPreviewContainer.add(createPreviewItemRow(row.getAddonName() + " (Add-on)", "Rp " + nf.format(row.getPrice())));
+                    itemsPreviewContainer.add(Box.createRigidArea(new Dimension(0, 6)));
+                    totalAmount += row.getPrice();
+                }
             }
 
             // Format Total Amount
-            java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(new java.util.Locale("in", "ID"));
             if (lblPreviewTotal != null) {
                 lblPreviewTotal.setText("Rp " + nf.format(totalAmount));
             }
@@ -921,13 +1125,19 @@ public class InvoicePanel extends javax.swing.JPanel {
     }
 
     private static class AddOnRow extends JPanel {
+        private int addonId;
+        private String addonName;
+        private double price;
         private JCheckBox checkBox;
         private JLabel priceLabel;
         private boolean isChecked;
         private Color activeBorderColor = new Color(6, 141, 240);
         private Color inactiveBorderColor = new Color(226, 232, 240);
 
-        public AddOnRow(String title, String price, boolean selected, Runnable onChange) {
+        public AddOnRow(int addonId, String title, String priceStr, double price, boolean selected, Runnable onChange) {
+            this.addonId = addonId;
+            this.addonName = title;
+            this.price = price;
             this.isChecked = selected;
             setLayout(new BorderLayout());
             setOpaque(false);
@@ -944,7 +1154,7 @@ public class InvoicePanel extends javax.swing.JPanel {
                 onChange.run();
             });
 
-            priceLabel = new JLabel(price);
+            priceLabel = new JLabel(priceStr);
             priceLabel.setFont(getModernFont(Font.BOLD, 12));
             priceLabel.setForeground(new Color(6, 141, 240));
 
@@ -956,6 +1166,18 @@ public class InvoicePanel extends javax.swing.JPanel {
 
         public boolean isSelected() {
             return isChecked;
+        }
+
+        public int getAddonId() {
+            return addonId;
+        }
+
+        public String getAddonName() {
+            return addonName;
+        }
+
+        public double getPrice() {
+            return price;
         }
 
         @Override
