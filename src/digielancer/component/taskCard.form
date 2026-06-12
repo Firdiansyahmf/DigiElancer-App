@@ -33,19 +33,16 @@
                   <Component id="taskTitle" alignment="0" min="-2" max="-2" attributes="0"/>
                   <Component id="taskDesc" alignment="0" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="40" max="32767" attributes="0"/>
+              <EmptySpace pref="65" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="1" attributes="0">
-                      <Component id="panelLabel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="1" attributes="0">
+                  <Group type="102" attributes="0">
                       <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
                   </Group>
+                  <Component id="panelLabel" min="-2" max="-2" attributes="0"/>
               </Group>
+              <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -77,32 +74,35 @@
   <SubComponents>
     <Component class="javax.swing.JLabel" name="taskTitle">
       <Properties>
+        <Property name="text" type="java.lang.String" value="API Integration"/>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Inter" size="14" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="API Integration"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="taskDesc">
       <Properties>
+        <Property name="text" type="java.lang.String" value="Connect API"/>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Inter" size="12" style="0"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Connect API"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="taskDL">
       <Properties>
+        <Property name="text" type="java.lang.String" value="2026-06-08"/>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Inter" size="12" style="0"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="2026-06-08"/>
       </Properties>
     </Component>
     <Container class="javax.swing.JPanel" name="panelLabel">
       <Properties>
         <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
           <Color blue="44" green="44" red="ef" type="rgb"/>
+        </Property>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+          <Font name="Inter" size="12" style="0"/>
         </Property>
       </Properties>
 
@@ -129,6 +129,8 @@
       <SubComponents>
         <Component class="javax.swing.JLabel" name="labelPriority">
           <Properties>
+            <Property name="horizontalAlignment" type="int" value="0"/>
+            <Property name="text" type="java.lang.String" value="High"/>
             <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="ff" green="ff" red="ff" type="rgb"/>
             </Property>
@@ -138,7 +140,7 @@
             <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="ff" green="ff" red="ff" type="rgb"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="High"/>
+            <Property name="horizontalTextPosition" type="int" value="0"/>
           </Properties>
         </Component>
       </SubComponents>

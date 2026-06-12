@@ -41,7 +41,7 @@ public class editLayananFrame extends javax.swing.JFrame {
         tambahButton = new javax.swing.JButton();
         simpanButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
 
         jLabel1.setFont(new java.awt.Font("Inter", 1, 18)); // NOI18N

@@ -7,6 +7,8 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+// dialogg
+import digielancer.component.PriceDialog;
 
 public class OnboardingScreen extends JFrame {
 
@@ -37,9 +39,13 @@ public class OnboardingScreen extends JFrame {
         setLocationRelativeTo(null);
         
         // favicon
-        java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
-        ImageIcon appIcon = new ImageIcon(iconURL);
-        setIconImage(appIcon.getImage());
+        try {
+            java.net.URL iconURL = getClass().getResource("/digielancer/assets/favicon-64.png");
+            if(iconURL != null) {
+                ImageIcon appIcon = new ImageIcon(iconURL);
+                setIconImage(appIcon.getImage());
+            }
+        } catch(Exception ignored){}
         
         setLayout(new GridBagLayout()); 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -281,22 +287,15 @@ public class OnboardingScreen extends JFrame {
 
         btn.addActionListener(e -> {
             if (btn.isSelected()) {
-                String priceStr = JOptionPane.showInputDialog(this, "Masukkan Tarif Dasar (Rp) untuk:\n" + skillName, "Tarif Dasar", JOptionPane.QUESTION_MESSAGE);
-                try {
-                    if (priceStr != null && !priceStr.trim().isEmpty()) {
-                        String cleanPrice = priceStr.replaceAll("[^\\d]", "");
-                        if(cleanPrice.isEmpty()) throw new NumberFormatException();
-                        
-                        double basePrice = Double.parseDouble(cleanPrice);
-                        selectedServices.add(new ServiceData(skillName, basePrice));
-                        btn.setBackground(new Color(14, 165, 233));
-                        btn.setForeground(Color.WHITE);
-                    } else {
-                        btn.setSelected(false); 
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Harap masukkan angka yang valid!", "Error", JOptionPane.ERROR_MESSAGE);
-                    btn.setSelected(false);
+                PriceDialog dialog = new PriceDialog(this, skillName);
+                dialog.setVisible(true);  
+                Double priceResult = dialog.getPrice();
+                if (priceResult != null) {
+                    selectedServices.add(new ServiceData(skillName, priceResult));
+                    btn.setBackground(new Color(14, 165, 233));
+                    btn.setForeground(Color.WHITE);
+                } else {
+                    btn.setSelected(false); 
                 }
             } else {
                 selectedServices.removeIf(s -> s.name.equals(skillName));
@@ -490,6 +489,11 @@ public class OnboardingScreen extends JFrame {
             PreparedStatement pstService = conn.prepareStatement(sqlService, Statement.RETURN_GENERATED_KEYS);
             PreparedStatement pstAddon = conn.prepareStatement(sqlAddon);
 
+            String sqlProject = "INSERT INTO project (user_id, main_service_id, client_name, client_contact, deadline) VALUES (?, ?, ?, ?, ?)";
+            String sqlBoard = "INSERT INTO board (project_id, board_name, description, is_completion_board, position_index) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement pstProject = conn.prepareStatement(sqlProject, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement pstBoard = conn.prepareStatement(sqlBoard);
+
             for (ServiceData s : selectedServices) {
                 pstService.setInt(1, userId);
                 pstService.setString(2, s.name);
@@ -506,6 +510,46 @@ public class OnboardingScreen extends JFrame {
                         pstAddon.addBatch(); 
                     }
                     pstAddon.executeBatch();
+
+                    // Automatically create a default/sample project for this service
+                    pstProject.setInt(1, userId);
+                    pstProject.setInt(2, serviceId);
+                    pstProject.setString(3, regBusinessName ); 
+                    pstProject.setString(4, regEmail);
+                    
+                    // Set deadline to 30 days from now
+                    java.sql.Date deadlineDate = new java.sql.Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
+                    pstProject.setDate(5, deadlineDate);
+                    pstProject.executeUpdate();
+                    
+                    ResultSet rsProject = pstProject.getGeneratedKeys();
+                    if (rsProject.next()) {
+                        int projectId = rsProject.getInt(1);
+                        
+                        // Insert standard Kanban boards for this project
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "To-Do");
+                        pstBoard.setString(3, "Tasks that need to be started");
+                        pstBoard.setInt(4, 0); // is_completion_board = false
+                        pstBoard.setInt(5, 1); // position_index = 1
+                        pstBoard.addBatch();
+                        
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "In Progress");
+                        pstBoard.setString(3, "Tasks currently being worked on");
+                        pstBoard.setInt(4, 0); // is_completion_board = false
+                        pstBoard.setInt(5, 2); // position_index = 2
+                        pstBoard.addBatch();
+                        
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "Done");
+                        pstBoard.setString(3, "Completed tasks ready for review");
+                        pstBoard.setInt(4, 1); 
+                        pstBoard.setInt(5, 3); 
+                        pstBoard.addBatch();
+                        
+                        pstBoard.executeBatch();
+                    }
                 }
             }
 
@@ -578,13 +622,21 @@ public class OnboardingScreen extends JFrame {
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // rokett
-        java.net.URL imgURL = getClass().getResource("/digielancer/assets/roket.png");
-        JLabel imgPlaceholder = new JLabel(new ImageIcon(imgURL));
-        imgPlaceholder.setAlignmentX(Component.CENTER_ALIGNMENT);
-                
-        left.add(logo);
-        left.add(Box.createRigidArea(new Dimension(0, 50)));
-        left.add(imgPlaceholder);
+        try {
+            java.net.URL imgURL = getClass().getResource("/digielancer/assets/roket.png");
+            if(imgURL != null) {
+                JLabel imgPlaceholder = new JLabel(new ImageIcon(imgURL));
+                imgPlaceholder.setAlignmentX(Component.CENTER_ALIGNMENT);
+                left.add(logo);
+                left.add(Box.createRigidArea(new Dimension(0, 50)));
+                left.add(imgPlaceholder);
+            } else {
+                left.add(logo);
+            }
+        } catch(Exception e) {
+            left.add(logo);
+        }
+        
         left.add(Box.createVerticalGlue());
         
         left.add(createInfoCard("🛡️", "Keamanan Terjamin", "Data Anda aman bersama kami"));
@@ -723,7 +775,7 @@ public class OnboardingScreen extends JFrame {
         double price;
         public AddOnData(String n, double p) { this.name = n; this.price = p; }
     }
-
+    
     public static void main(String[] args) {
         java.awt.EventQueue.invokeLater(() -> new OnboardingScreen().setVisible(true));
     }

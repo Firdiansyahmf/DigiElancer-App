@@ -12,13 +12,15 @@ public class TaskModel {
     private int id;
     private int boardId; // 1 = To-Do, 2 = In Progress, 3 = Done
     private String title;
+    private String description;
     private String deadline;
     private String priority;
 
-    public TaskModel(int id, int boardId, String title, String deadline, String priority) {
+    public TaskModel(int id, int boardId, String title, String description, String deadline, String priority) {
         this.id = id;
         this.boardId = boardId;
         this.title = title;
+        this.description = description;
         this.deadline = deadline;
         this.priority = priority;
     }
@@ -27,6 +29,7 @@ public class TaskModel {
     public int getId() { return id; }
     public int getBoardId() { return boardId; }
     public String getTitle() { return title; }
+    public String getDescription() { return description; }
     public String getDeadline() { return deadline; }
     public String getPriority() { return priority; }
 }

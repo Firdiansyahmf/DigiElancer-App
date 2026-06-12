@@ -15,6 +15,8 @@ public class addProject extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(addProject.class.getName());
     private int currentUserId;
+    private int projectIdToEdit = 0;
+    private ProjectManagement parentPanel;
 
     /**
      * Creates new form addProject
@@ -23,7 +25,64 @@ public class addProject extends javax.swing.JFrame {
         initComponents();
         this.currentUserId = currentUserId;
         loadServiceDropdown(currentUserId);
+        
+        ((javax.swing.text.AbstractDocument) namaField.getDocument()).setDocumentFilter(new LengthLimitFilter(50));
+        configureDatePicker(null);
     }
+
+    public addProject(java.awt.Frame parent, boolean modal, int currentUserId, int projectIdToEdit, ProjectManagement parentPanel) {
+        initComponents();
+        this.currentUserId = currentUserId;
+        this.projectIdToEdit = projectIdToEdit;
+        this.parentPanel = parentPanel;
+        
+        loadServiceDropdown(currentUserId);
+        configureDatePicker(null);
+        
+        if (projectIdToEdit > 0) {
+            jLabel1.setText("Edit Project");
+            jButton1.setText("Perbarui Project");
+            
+            digielancer.model.ProjectModel project = digielancer.model.ProjectDAO.getProjectById(projectIdToEdit);
+            if (project != null) {
+                namaField.setText(project.getClientName());
+                if (project.getDeadline() != null && !project.getDeadline().isEmpty()) {
+                    try {
+                        java.time.LocalDate deadlineDate = java.time.LocalDate.parse(project.getDeadline());
+                        configureDatePicker(deadlineDate);
+                        datePicker1.setDate(deadlineDate);
+                    } catch (Exception ex) {
+                        logger.log(java.util.logging.Level.WARNING, "Error parsing project deadline date", ex);
+                    }
+                }
+                
+                // Select matching service dropdown item
+                for (int i = 0; i < comboService.getItemCount(); i++) {
+                    Object item = comboService.getItemAt(i);
+                    if (item instanceof ServiceModel) {
+                        ServiceModel s = (ServiceModel) item;
+                        if (s.getId() == project.getMainServiceId()) {
+                            comboService.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        ((javax.swing.text.AbstractDocument) namaField.getDocument()).setDocumentFilter(new LengthLimitFilter(50));
+    }
+
+    private void configureDatePicker(java.time.LocalDate existingDate) {
+        com.github.lgooddatepicker.components.DatePickerSettings settings = datePicker1.getSettings();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate minDate = today;
+        if (existingDate != null && existingDate.isBefore(today)) {
+            minDate = existingDate;
+        }
+        settings.setDateRangeLimits(minDate, null);
+    }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -39,33 +98,34 @@ public class addProject extends javax.swing.JFrame {
         namaField = new javax.swing.JTextField();
         comboService = new javax.swing.JComboBox<>();
         jButton1 = new javax.swing.JButton();
-        txtDeadline = new javax.swing.JFormattedTextField();
-        kontakField = new javax.swing.JTextField();
+        datePicker1 = new com.github.lgooddatepicker.components.DatePicker();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setAlwaysOnTop(true);
         setBackground(new java.awt.Color(255, 255, 255));
 
-        jLabel1.setFont(new java.awt.Font("Inter", 1, 18)); // NOI18N
         jLabel1.setText("Project Baru");
-
-        namaField.setText("Nama Klien");
+        jLabel1.setFont(new java.awt.Font("Inter", 1, 18)); // NOI18N
 
         comboService.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        jButton1.setText("Simpan Project");
         jButton1.setBackground(new java.awt.Color(6, 141, 240));
         jButton1.setFont(new java.awt.Font("Inter", 1, 18)); // NOI18N
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("Simpan Project");
         jButton1.addActionListener(this::jButton1ActionPerformed);
 
-        try {
-            txtDeadline.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.MaskFormatter("##/##/####")));
-        } catch (java.text.ParseException ex) {
-            ex.printStackTrace();
-        }
+        jLabel2.setFont(new java.awt.Font("Inter", 1, 12)); // NOI18N
+        jLabel2.setText("Nama Klien");
 
-        kontakField.setText("Kontak klien");
+        jLabel4.setFont(new java.awt.Font("Inter", 1, 12)); // NOI18N
+        jLabel4.setText("Service");
+
+        jLabel5.setFont(new java.awt.Font("Inter", 1, 12)); // NOI18N
+        jLabel5.setText("Deadline");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -74,38 +134,44 @@ public class addProject extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(16, 16, 16)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 307, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(namaField, javax.swing.GroupLayout.DEFAULT_SIZE, 215, Short.MAX_VALUE)
-                                    .addComponent(comboService, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(txtDeadline)
-                                    .addComponent(kontakField, javax.swing.GroupLayout.DEFAULT_SIZE, 229, Short.MAX_VALUE))))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addComponent(namaField, javax.swing.GroupLayout.DEFAULT_SIZE, 215, Short.MAX_VALUE)
+                    .addComponent(jLabel2)
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4)
+                    .addComponent(comboService, 0, 162, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel5)
+                    .addComponent(datePicker1, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE))
+                .addGap(18, 18, 18))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(14, 14, 14)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(namaField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(kontakField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(comboService, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtDeadline, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(datePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addGap(4, 4, 4)
+                                .addComponent(namaField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(comboService, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(21, 21, 21))
+                .addGap(18, 18, 18))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -126,56 +192,67 @@ public class addProject extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         
-        String clientName = namaField.getText();
-        String clientContact = kontakField.getText();
-        String rawDate = txtDeadline.getText(); // User typed: "30-06-2026"
+        String clientName = namaField.getText().trim();
+        String clientContact = "";
+        if (projectIdToEdit > 0) {
+            digielancer.model.ProjectModel project = digielancer.model.ProjectDAO.getProjectById(projectIdToEdit);
+            if (project != null) {
+                clientContact = project.getClientContact();
+            }
+        }
+        java.time.LocalDate selectedDate = datePicker1.getDate();
 
         // 3. Basic Validation: Prevent empty fields
-        if (clientName.isEmpty() || clientContact.isEmpty() || rawDate.isEmpty()) {
+        if (clientName.isEmpty() || selectedDate == null) {
             javax.swing.JOptionPane.showMessageDialog(this, "Harap isi semua data!", "Peringatan", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // 4. Translate Date and Save to Database
-        try {
-            // Convert dd-MM-yyyy to yyyy-MM-dd
-            java.text.SimpleDateFormat userFormat = new java.text.SimpleDateFormat("dd/MM/yyyy");
-            java.text.SimpleDateFormat sqlFormat = new java.text.SimpleDateFormat("yyyy/MM/dd");
+        // 4. Get Date String in yyyy-MM-dd format directly
+        String sqlDateString = selectedDate.toString(); // e.g. "2026-06-12"
+        
+        Object selectedItem = comboService.getSelectedItem();
 
-            java.util.Date parsedDate = userFormat.parse(rawDate);
-            String sqlDateString = sqlFormat.format(parsedDate);
+        // 2. Check: Is it actually a ServiceModel object?
+        if (selectedItem instanceof digielancer.model.ServiceModel) {
+            digielancer.model.ServiceModel selectedService = (digielancer.model.ServiceModel) selectedItem;
+            int serviceIdToSave = selectedService.getId();
             
-            Object selectedItem = comboService.getSelectedItem();
-    
-            // 2. Check: Is it actually a ServiceModel object?
-            if (selectedItem instanceof digielancer.model.ServiceModel) {
-                // It IS a ServiceModel! We can safely cast it now.
-                digielancer.model.ServiceModel selectedService = (digielancer.model.ServiceModel) selectedItem;
-                int serviceIdToSave = selectedService.getId();
-                
-                // 5. Send data to the DAO
-                boolean isSuccess = digielancer.model.ProjectDAO.addProject(
+            boolean isSuccess;
+            if (projectIdToEdit > 0) {
+                // Edit existing project
+                isSuccess = digielancer.model.ProjectDAO.editProject(
+                    projectIdToEdit, 
+                    serviceIdToSave, 
+                    clientName, 
+                    clientContact, 
+                    sqlDateString
+                );
+            } else {
+                // Add new project
+                isSuccess = digielancer.model.ProjectDAO.addProject(
                     this.currentUserId, 
                     serviceIdToSave, 
                     clientName, 
                     clientContact, 
                     sqlDateString
                 );
-                
-                if (isSuccess) {
-                    javax.swing.JOptionPane.showMessageDialog(this, "Project berhasil ditambahkan!");
-                    this.dispose(); // Close the popup window
-
-                } else {
-                    javax.swing.JOptionPane.showMessageDialog(this, "Gagal menyimpan ke database.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                // It was a String (like "Item 1" or "Select Service")
-                javax.swing.JOptionPane.showMessageDialog(this, "Harap pilih Service yang valid dari dropdown!", "Peringatan", javax.swing.JOptionPane.WARNING_MESSAGE);
-                return; // Stop the save process
             }
-        } catch (java.text.ParseException e) {
-            javax.swing.JOptionPane.showMessageDialog(this, e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            
+            if (isSuccess) {
+                javax.swing.JOptionPane.showMessageDialog(this, projectIdToEdit > 0 ? "Project berhasil diperbarui!" : "Project berhasil ditambahkan!");
+                if (parentPanel != null) {
+                    parentPanel.loadHorizontalProjects();
+                    if (projectIdToEdit > 0) {
+                        parentPanel.loadBoard(projectIdToEdit); // Reload board metadata if editing active project
+                    }
+                }
+                this.dispose(); // Close the popup window
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this, "Gagal menyimpan ke database.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "Harap pilih Service yang valid dari dropdown!", "Peringatan", javax.swing.JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -185,12 +262,14 @@ public class addProject extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<Object> comboService;
+    private com.github.lgooddatepicker.components.DatePicker datePicker1;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField kontakField;
     private javax.swing.JTextField namaField;
-    private javax.swing.JFormattedTextField txtDeadline;
     // End of variables declaration//GEN-END:variables
     
     private void loadServiceDropdown(int currentUserId) {
@@ -206,4 +285,28 @@ public class addProject extends javax.swing.JFrame {
         }
     }
 
+    private static class LengthLimitFilter extends javax.swing.text.DocumentFilter {
+        private final int limit;
+        public LengthLimitFilter(int limit) {
+            this.limit = limit;
+        }
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr) throws javax.swing.text.BadLocationException {
+            if (string == null) return;
+            if ((fb.getDocument().getLength() + string.length()) <= limit) {
+                super.insertString(fb, offset, string, attr);
+            } else {
+                java.awt.Toolkit.getDefaultToolkit().beep();
+            }
+        }
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
+            if (text == null) return;
+            if ((fb.getDocument().getLength() + text.length() - length) <= limit) {
+                super.replace(fb, offset, length, text, attrs);
+            } else {
+                java.awt.Toolkit.getDefaultToolkit().beep();
+            }
+        }
+    }
 }

@@ -18,28 +18,89 @@ public class taskCard extends javax.swing.JPanel {
     /**
      * Creates new form taskCard
      */
-    public taskCard(TaskModel task, digielancer.component.ProjectManagement parentBoard) {
+    public taskCard(final TaskModel task, final digielancer.component.ProjectManagement parentBoard) {
         initComponents();
-        
-        this.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 100));
         
         this.taskID = task.getId();
         this.parentBoard = parentBoard;
         
         // Push the database text into the labels you dragged onto the screen
-        taskTitle.setText(task.getTitle());
-        taskDL.setText("Deadline: " + task.getDeadline());
-        labelPriority.setText(task.getPriority());
-        
-        // Optional: Change the priority text color based on the value
-        if (task.getPriority().equals("High")) {
-            labelPriority.setForeground(new Color(255, 255, 255));
-            panelLabel.setBackground(new Color(239, 68, 68));
-        } else if (task.getPriority().equals("Medium")) {
-            labelPriority.setForeground(new Color(243, 156, 18)); // Orange
-        } else {
-            labelPriority.setForeground(new Color(46, 204, 113)); // Green
+        String titleStr = task.getTitle();
+        if (titleStr != null && titleStr.length() > 20) {
+            titleStr = titleStr.substring(0, 17) + "...";
         }
+        taskTitle.setText(titleStr);
+        
+        String descStr = task.getDescription();
+        if (descStr != null) {
+            if (descStr.length() > 40) {
+                descStr = descStr.substring(0, 37) + "...";
+            }
+            taskDesc.setText("<html><body style='width: 110px;'>" + escapeHtml(descStr) + "</body></html>");
+        } else {
+            taskDesc.setText("");
+        }
+        
+        taskDL.setText("Deadline: " + task.getDeadline());
+        
+        // Setup priority badge layout programmatically for perfect padding
+        panelLabel.removeAll();
+        panelLabel.setLayout(new java.awt.BorderLayout());
+        labelPriority.setText(task.getPriority());
+        labelPriority.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelPriority.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
+        labelPriority.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 6, 2, 6));
+        labelPriority.setForeground(new Color(255, 255, 255)); // White text
+        panelLabel.add(labelPriority, java.awt.BorderLayout.CENTER);
+        
+        // Color coding for background based on priority value
+        if (task.getPriority().equalsIgnoreCase("High")) {
+            panelLabel.setBackground(new Color(239, 68, 68)); // Red
+        } else if (task.getPriority().equalsIgnoreCase("Medium")) {
+            panelLabel.setBackground(new Color(245, 158, 11)); // Amber/Orange
+        } else {
+            panelLabel.setBackground(new Color(16, 185, 129)); // Green
+        }
+        
+        // Add edit click listener on editIcon (jLabel1)
+        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(taskCard.this);
+                java.awt.Frame parentFrame = (java.awt.Frame) window;
+                int projectId = parentBoard.getCurrentProjectId();
+                
+                addTask dialog = new addTask(parentFrame, true, projectId, task.getBoardId(), taskID, parentBoard);
+                dialog.setLocationRelativeTo(parentFrame);
+                dialog.setVisible(true);
+            }
+        });
+
+        // Add delete click listener on closeIcon (jLabel2)
+        jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel2.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int confirm = javax.swing.JOptionPane.showConfirmDialog(
+                    taskCard.this,
+                    "Apakah Anda yakin ingin menghapus task \"" + task.getTitle() + "\"",
+                    "Konfirmasi Hapus Task",
+                    javax.swing.JOptionPane.YES_NO_OPTION,
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+                );
+                
+                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                    boolean success = digielancer.model.TaskDAO.deleteTask(taskID);
+                    if (success) {
+                        javax.swing.JOptionPane.showMessageDialog(taskCard.this, "Task berhasil dihapus!");
+                        parentBoard.loadBoard(parentBoard.getCurrentProjectId());
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(taskCard.this, "Gagal menghapus task.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -62,21 +123,24 @@ public class taskCard extends javax.swing.JPanel {
         setBackground(new java.awt.Color(255, 255, 255));
         setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true));
 
-        taskTitle.setFont(new java.awt.Font("Inter", 1, 14)); // NOI18N
         taskTitle.setText("API Integration");
+        taskTitle.setFont(new java.awt.Font("Inter", 1, 14)); // NOI18N
 
-        taskDesc.setFont(new java.awt.Font("Inter", 0, 12)); // NOI18N
         taskDesc.setText("Connect API");
+        taskDesc.setFont(new java.awt.Font("Inter", 0, 12)); // NOI18N
 
-        taskDL.setFont(new java.awt.Font("Inter", 0, 12)); // NOI18N
         taskDL.setText("2026-06-08");
+        taskDL.setFont(new java.awt.Font("Inter", 0, 12)); // NOI18N
 
         panelLabel.setBackground(new java.awt.Color(239, 68, 68));
+        panelLabel.setFont(new java.awt.Font("Inter", 0, 12)); // NOI18N
 
+        labelPriority.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelPriority.setText("High");
         labelPriority.setBackground(new java.awt.Color(255, 255, 255));
         labelPriority.setFont(new java.awt.Font("Inter", 1, 10)); // NOI18N
         labelPriority.setForeground(new java.awt.Color(255, 255, 255));
-        labelPriority.setText("High");
+        labelPriority.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
 
         javax.swing.GroupLayout panelLabelLayout = new javax.swing.GroupLayout(panelLabel);
         panelLabel.setLayout(panelLabelLayout);
@@ -113,12 +177,12 @@ public class taskCard extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(panelLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(11, 11, 11))
+                        .addGap(16, 16, 16))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2)
-                        .addGap(10, 10, 10))))
+                        .addGap(15, 15, 15))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -150,4 +214,30 @@ public class taskCard extends javax.swing.JPanel {
     private javax.swing.JLabel taskDesc;
     private javax.swing.JLabel taskTitle;
     // End of variables declaration//GEN-END:variables
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#39;");
+    }
+
+    @Override
+    public java.awt.Dimension getPreferredSize() {
+        java.awt.Dimension d = super.getPreferredSize();
+        return new java.awt.Dimension(214, Math.max(85, d.height));
+    }
+
+    @Override
+    public java.awt.Dimension getMinimumSize() {
+        java.awt.Dimension d = super.getMinimumSize();
+        return new java.awt.Dimension(214, Math.max(85, d.height));
+    }
+
+    @Override
+    public java.awt.Dimension getMaximumSize() {
+        return getPreferredSize();
+    }
 }

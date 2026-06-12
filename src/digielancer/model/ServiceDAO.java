@@ -43,4 +43,25 @@ public class ServiceDAO {
         
         return serviceList;
     }
+
+    public static ServiceModel getServiceById(int serviceId) {
+        String query = "SELECT id, user_id, service_name FROM main_service WHERE id = ?";
+        try (Connection conn = KoneksiDB.configDB();
+             PreparedStatement pst = conn.prepareStatement(query)) {
+            pst.setInt(1, serviceId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return new ServiceModel(
+                        rs.getInt("id"),
+                        rs.getInt("user_id"),
+                        rs.getString("service_name")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error fetching service by ID: " + serviceId);
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
