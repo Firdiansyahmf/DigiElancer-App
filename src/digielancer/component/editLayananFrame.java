@@ -4,6 +4,15 @@
  */
 package digielancer.component;
 
+import digielancer.main.UserSession;
+import digielancer.main.KoneksiDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author Dwi R.A. Kautsar
@@ -17,6 +26,149 @@ public class editLayananFrame extends javax.swing.JFrame {
      */
     public editLayananFrame() {
         initComponents();
+        setupUI();
+    }
+
+    private List<String> existingServices = new ArrayList<>();
+
+    private void setupUI() {
+        // Fetch existing services
+        try {
+            Connection conn = KoneksiDB.configDB();
+            String sql = "SELECT service_name FROM MAIN_SERVICE WHERE user_id = ?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, UserSession.getId());
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                existingServices.add(rs.getString("service_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Styling toggle buttons
+        styleToggleButton(jToggleButton1, "Pembuatan Web");
+        styleToggleButton(jToggleButton2, "Aplikasi Mobile");
+        styleToggleButton(jToggleButton3, "Desain Grafis");
+        styleToggleButton(jToggleButton4, "Motion Graphic");
+        styleToggleButton(jToggleButton5, "Backend Dev");
+        styleToggleButton(jToggleButton6, "Database Design");
+        styleToggleButton(jToggleButton7, "API Integration");
+
+        // Styling placeholder for textfield
+        jTextField1.setText("Tambah Keahlian Lain...");
+        jTextField1.setForeground(java.awt.Color.GRAY);
+        
+        jTextField1.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (jTextField1.getText().equals("Tambah Keahlian Lain...")) {
+                    jTextField1.setText("");
+                    jTextField1.setForeground(java.awt.Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (jTextField1.getText().isEmpty()) {
+                    jTextField1.setText("Tambah Keahlian Lain...");
+                    jTextField1.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+
+        hargaTextField.setText("Harga (Rp)");
+        hargaTextField.setForeground(java.awt.Color.GRAY);
+        
+        hargaTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (hargaTextField.getText().equals("Harga (Rp)") || hargaTextField.getText().equals("Harga")) {
+                    hargaTextField.setText("");
+                    hargaTextField.setForeground(java.awt.Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (hargaTextField.getText().isEmpty()) {
+                    hargaTextField.setText("Harga (Rp)");
+                    hargaTextField.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+
+        simpanButton.addActionListener(e -> simpanLayanan());
+    }
+
+    private void styleToggleButton(javax.swing.JToggleButton btn, String text) {
+        btn.setText(text);
+        if (existingServices.contains(text)) {
+            btn.setSelected(true);
+            btn.setBackground(new java.awt.Color(14, 165, 233));
+            btn.setForeground(java.awt.Color.WHITE);
+        } else {
+            btn.setBackground(java.awt.Color.WHITE);
+            btn.setForeground(new java.awt.Color(100, 116, 139));
+        }
+        btn.setFocusPainted(false);
+        btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        btn.addItemListener(e -> {
+            if (btn.isSelected()) {
+                btn.setBackground(new java.awt.Color(14, 165, 233));
+                btn.setForeground(java.awt.Color.WHITE);
+            } else {
+                btn.setBackground(java.awt.Color.WHITE);
+                btn.setForeground(new java.awt.Color(100, 116, 139));
+            }
+        });
+    }
+
+    private void simpanLayanan() {
+        List<String> selectedServices = new ArrayList<>();
+        javax.swing.JToggleButton[] btns = {jToggleButton1, jToggleButton2, jToggleButton3, jToggleButton4, jToggleButton5, jToggleButton6, jToggleButton7};
+        for (javax.swing.JToggleButton btn : btns) {
+            if (btn.isSelected()) selectedServices.add(btn.getText());
+        }
+        
+        // custom service from textfield
+        String custom = jTextField1.getText().trim();
+        if (!custom.isEmpty() && !custom.equals("Tambah Keahlian Lain...")) {
+            selectedServices.add(custom);
+        }
+        
+        if (selectedServices.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Pilih minimal 1 keahlian!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double customPrice = 500000.0;
+        String priceText = hargaTextField.getText().replaceAll("[^\\d]", "");
+        if (!priceText.isEmpty()) {
+            customPrice = Double.parseDouble(priceText);
+        }
+
+        try {
+            Connection conn = KoneksiDB.configDB();
+            conn.setAutoCommit(false);
+            
+            // For each selected, if not in existing -> insert
+            for (String sel : selectedServices) {
+                if (!existingServices.contains(sel)) {
+                    String sqlIn = "INSERT INTO MAIN_SERVICE (user_id, service_name, base_price) VALUES (?, ?, ?)";
+                    PreparedStatement pstIn = conn.prepareStatement(sqlIn);
+                    pstIn.setInt(1, UserSession.getId());
+                    pstIn.setString(2, sel);
+                    pstIn.setDouble(3, customPrice);
+                    pstIn.executeUpdate();
+                }
+            }
+            
+            conn.commit();
+            JOptionPane.showMessageDialog(this, "Layanan berhasil disimpan!");
+            this.dispose(); // Close modal
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal menyimpan layanan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -40,6 +192,7 @@ public class editLayananFrame extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         tambahButton = new javax.swing.JButton();
         simpanButton = new javax.swing.JButton();
+        hargaTextField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
@@ -110,6 +263,9 @@ public class editLayananFrame extends javax.swing.JFrame {
         simpanButton.setBorderPainted(false);
         simpanButton.setFocusPainted(false);
 
+        hargaTextField.setText("Harga");
+        hargaTextField.addActionListener(this::hargaTextFieldActionPerformed);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -118,8 +274,10 @@ public class editLayananFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
                         .addComponent(tambahButton))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jToggleButton1)
@@ -159,12 +317,13 @@ public class editLayananFrame extends javax.swing.JFrame {
                     .addComponent(jToggleButton6)
                     .addComponent(jToggleButton7))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tambahButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tambahButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(simpanButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(51, Short.MAX_VALUE))
+                .addContainerGap(48, Short.MAX_VALUE))
         );
 
         pack();
@@ -202,6 +361,10 @@ public class editLayananFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_tambahButtonActionPerformed
 
+    private void hargaTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hargaTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_hargaTextFieldActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -228,6 +391,7 @@ public class editLayananFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField hargaTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JTextField jTextField1;

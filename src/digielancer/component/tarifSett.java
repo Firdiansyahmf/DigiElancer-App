@@ -4,6 +4,14 @@
  */
 package digielancer.component;
 
+import digielancer.main.UserSession;
+import digielancer.main.KoneksiDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import javax.swing.*;
+import java.awt.*;
+
 /**
  *
  * @author Dwi R.A. Kautsar
@@ -13,8 +21,195 @@ public class tarifSett extends javax.swing.JPanel {
     /**
      * Creates new form tarifSett
      */
+    class ServiceItem {
+        int id;
+        String name;
+        public ServiceItem(int id, String name) { this.id = id; this.name = name; }
+        @Override
+        public String toString() { return name; }
+    }
+
     public tarifSett() {
         initComponents();
+        loadDynamicAddons();
+    }
+
+    private void loadDynamicAddons() {
+        this.removeAll();
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.setBackground(Color.WHITE);
+        this.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JLabel title = new JLabel("Tarif Add-Ons");
+        title.setFont(new Font("Inter", Font.BOLD, 18));
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(title);
+        this.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Container for addons list
+        JPanel addonsList = new JPanel();
+        addonsList.setLayout(new BoxLayout(addonsList, BoxLayout.Y_AXIS));
+        addonsList.setBackground(Color.WHITE);
+        addonsList.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JComboBox<ServiceItem> cbServices = new JComboBox<>();
+        cbServices.setMaximumSize(new Dimension(200, 40));
+        
+        try {
+            Connection conn = KoneksiDB.configDB();
+            
+            // Populate ComboBox
+            String sqlMs = "SELECT id, service_name FROM MAIN_SERVICE WHERE user_id = ?";
+            PreparedStatement pstMs = conn.prepareStatement(sqlMs);
+            pstMs.setInt(1, UserSession.getId());
+            ResultSet rsMs = pstMs.executeQuery();
+            while (rsMs.next()) {
+                cbServices.addItem(new ServiceItem(rsMs.getInt("id"), rsMs.getString("service_name")));
+            }
+            
+            // Populate Addons List
+            String sqlAddon = "SELECT a.id, m.service_name, a.addon_name, a.price FROM ADD_ON a JOIN MAIN_SERVICE m ON a.main_service_id = m.id WHERE m.user_id = ?";
+            PreparedStatement pstAddon = conn.prepareStatement(sqlAddon);
+            pstAddon.setInt(1, UserSession.getId());
+            ResultSet rsAddon = pstAddon.executeQuery();
+            
+            while (rsAddon.next()) {
+                int addonId = rsAddon.getInt("id");
+                String msName = rsAddon.getString("service_name");
+                String addonName = rsAddon.getString("addon_name");
+                double price = rsAddon.getDouble("price");
+
+                JPanel itemPanel = new JPanel(new BorderLayout());
+                itemPanel.setBackground(new Color(226, 232, 240));
+                itemPanel.setMaximumSize(new Dimension(630, 60));
+                itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+                
+                JLabel lblName = new JLabel(msName + " - " + addonName);
+                lblName.setFont(new Font("Inter", Font.BOLD, 14));
+                
+                JLabel lblPrice = new JLabel(String.format("Rp %,.0f", price));
+                lblPrice.setFont(new Font("Inter", Font.BOLD, 14));
+                lblPrice.setForeground(new Color(6, 141, 240));
+                
+                JButton btnDelete = new JButton("X");
+                btnDelete.setBackground(new Color(255, 51, 51));
+                btnDelete.setForeground(Color.WHITE);
+                btnDelete.setFont(new Font("Inter", Font.BOLD, 14));
+                btnDelete.setBorderPainted(false);
+                btnDelete.setFocusPainted(false);
+                btnDelete.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                
+                btnDelete.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus Add-on ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        try {
+                            PreparedStatement del = conn.prepareStatement("DELETE FROM ADD_ON WHERE id=?");
+                            del.setInt(1, addonId);
+                            del.executeUpdate();
+                            loadDynamicAddons(); // Reload UI
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+                
+                JPanel rightBox = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+                rightBox.setOpaque(false);
+                rightBox.add(lblPrice);
+                rightBox.add(btnDelete);
+                
+                itemPanel.add(lblName, BorderLayout.WEST);
+                itemPanel.add(rightBox, BorderLayout.EAST);
+                
+                addonsList.add(itemPanel);
+                addonsList.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        JScrollPane scrollPane = new JScrollPane(addonsList);
+        scrollPane.setBorder(null);
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(scrollPane);
+        this.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Input Area
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.X_AXIS));
+        inputPanel.setOpaque(false);
+        inputPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JTextField tfName = new JTextField();
+        tfName.setMaximumSize(new Dimension(250, 40));
+        tfName.setPreferredSize(new Dimension(250, 40));
+        tfName.setText("Nama Add-on");
+        tfName.setForeground(Color.GRAY);
+        tfName.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) { if(tfName.getText().equals("Nama Add-on")) { tfName.setText(""); tfName.setForeground(Color.BLACK); } }
+            public void focusLost(java.awt.event.FocusEvent e) { if(tfName.getText().isEmpty()) { tfName.setText("Nama Add-on"); tfName.setForeground(Color.GRAY); } }
+        });
+        
+        JTextField tfPrice = new JTextField();
+        tfPrice.setMaximumSize(new Dimension(130, 40));
+        tfPrice.setPreferredSize(new Dimension(130, 40));
+        tfPrice.setText("Harga (Rp)");
+        tfPrice.setForeground(Color.GRAY);
+        tfPrice.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) { if(tfPrice.getText().equals("Harga (Rp)")) { tfPrice.setText(""); tfPrice.setForeground(Color.BLACK); } }
+            public void focusLost(java.awt.event.FocusEvent e) { if(tfPrice.getText().isEmpty()) { tfPrice.setText("Harga (Rp)"); tfPrice.setForeground(Color.GRAY); } }
+        });
+        
+        JButton btnAdd = new JButton("+");
+        btnAdd.setBackground(new Color(6, 141, 240));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setFont(new Font("Inter", Font.BOLD, 18));
+        btnAdd.setBorderPainted(false);
+        btnAdd.setFocusPainted(false);
+        btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        btnAdd.addActionListener(e -> {
+            ServiceItem selectedMs = (ServiceItem) cbServices.getSelectedItem();
+            String name = tfName.getText().trim();
+            String priceStr = tfPrice.getText().trim().replaceAll("[^\\d]", "");
+            
+            if (selectedMs == null) {
+                JOptionPane.showMessageDialog(this, "Pilih Layanan Utama terlebih dahulu!");
+                return;
+            }
+            if (name.isEmpty() || name.equals("Nama Add-on") || priceStr.isEmpty() || priceStr.equals("Harga (Rp)")) {
+                JOptionPane.showMessageDialog(this, "Nama Add-on dan Harga harus diisi!");
+                return;
+            }
+            
+            try {
+                double price = Double.parseDouble(priceStr);
+                Connection conn = KoneksiDB.configDB();
+                String sql = "INSERT INTO ADD_ON (main_service_id, addon_name, price) VALUES (?, ?, ?)";
+                PreparedStatement pst = conn.prepareStatement(sql);
+                pst.setInt(1, selectedMs.id);
+                pst.setString(2, name);
+                pst.setDouble(3, price);
+                pst.executeUpdate();
+                
+                loadDynamicAddons(); // Reload UI
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            }
+        });
+        
+        inputPanel.add(cbServices);
+        inputPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+        inputPanel.add(tfName);
+        inputPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+        inputPanel.add(tfPrice);
+        inputPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+        inputPanel.add(btnAdd);
+        
+        this.add(inputPanel);
+        
+        this.revalidate();
+        this.repaint();
     }
 
     /**
@@ -119,8 +314,8 @@ public class tarifSett extends javax.swing.JPanel {
                 .addGap(14, 14, 14)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cancelButton1)
                 .addGap(12, 12, 12))
         );
@@ -201,18 +396,20 @@ public class tarifSett extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 703, Short.MAX_VALUE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(layananTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 480, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(tambahButton))))
-                .addContainerGap(12, Short.MAX_VALUE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(layananTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 480, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(tambahButton)))
+                        .addGap(0, 38, Short.MAX_VALUE))
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
