@@ -11,8 +11,8 @@ public class KoneksiDB {
     public static Connection configDB() throws SQLException {
         try {
             String url = "jdbc:mysql://localhost:3306/db_digielancer"; 
-            String user = "root";
-            String pass = "";
+            String user = "db_kautsar";
+            String pass = "Anandifa12";
             
             DriverManager.registerDriver(new com.mysql.cj.jdbc.Driver());
             mysqlconfig = DriverManager.getConnection(url, user, pass);
