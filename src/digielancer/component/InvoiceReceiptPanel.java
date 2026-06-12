@@ -29,6 +29,10 @@ public class InvoiceReceiptPanel extends javax.swing.JPanel {
     private RoundedPanel invoiceCard;
     private java.awt.Container lastGrandParent = null;
 
+    public RoundedPanel getInvoiceCard() {
+        return invoiceCard;
+    }
+
     public InvoiceReceiptPanel(String invoiceNumber, String clientName, String projectName, double totalPrice, 
                                List<String> itemDescriptions, List<Double> itemPrices, String generatedDate) {
         this.invoiceNumber = invoiceNumber;

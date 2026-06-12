@@ -7,6 +7,8 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 public class HistoryInvoicePanel extends javax.swing.JPanel {
 
@@ -442,32 +444,104 @@ public class HistoryInvoicePanel extends javax.swing.JPanel {
 
     private void exportInvoiceToFile(String invoiceNumber, String clientName, String projectName, double totalPrice, List<String> items, Component parent) {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setSelectedFile(new java.io.File(invoiceNumber + ".txt"));
+        fileChooser.setSelectedFile(new java.io.File(invoiceNumber + ".png"));
         int userSelection = fileChooser.showSaveDialog(parent);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             java.io.File fileToSave = fileChooser.getSelectedFile();
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(fileToSave))) {
-                writer.println("=========================================");
-                writer.println("            DIGI ELANCER INVOICE         ");
-                writer.println("=========================================");
-                writer.println("Nomor Nota     : " + invoiceNumber);
-                writer.println("Tanggal        : " + new java.util.Date());
-                writer.println("Klien          : " + clientName);
-                writer.println("Project        : " + projectName);
-                writer.println("-----------------------------------------");
-                writer.println("Rincian Layanan:");
-                for (String item : items) {
-                    writer.println(" - " + item);
+            try {
+                // Query clean details from the database based on invoiceNumber
+                List<String> itemDescs = new ArrayList<>();
+                List<Double> itemPrices = new ArrayList<>();
+                String dateStr = "";
+                
+                try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+                    String sqlInv = "SELECT id, generated_date FROM invoice WHERE invoice_number = ?";
+                    int invId = 0;
+                    try (PreparedStatement pstInv = conn.prepareStatement(sqlInv)) {
+                        pstInv.setString(1, invoiceNumber);
+                        try (ResultSet rsInv = pstInv.executeQuery()) {
+                            if (rsInv.next()) {
+                                invId = rsInv.getInt("id");
+                                java.sql.Timestamp genDate = rsInv.getTimestamp("generated_date");
+                                if (genDate != null) {
+                                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy", new java.util.Locale("id", "ID"));
+                                    dateStr = sdf.format(new java.util.Date(genDate.getTime()));
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (invId > 0) {
+                        String sqlItems = "SELECT item_description, snapshot_price FROM invoice_item WHERE invoice_id = ?";
+                        try (PreparedStatement pstItems = conn.prepareStatement(sqlItems)) {
+                            pstItems.setInt(1, invId);
+                            try (ResultSet rsItems = pstItems.executeQuery()) {
+                                while (rsItems.next()) {
+                                    itemDescs.add(rsItems.getString("item_description"));
+                                    itemPrices.add(rsItems.getDouble("snapshot_price"));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Gagal memuat detail invoice dari DB: " + ex.getMessage());
                 }
-                writer.println("-----------------------------------------");
-                java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(new java.util.Locale("in", "ID"));
-                writer.println("TOTAL          : Rp " + nf.format(totalPrice));
-                writer.println("=========================================");
-                writer.println("       Terima kasih atas kerja samanya!  ");
-                writer.flush();
+                
+                if (dateStr.isEmpty()) {
+                    dateStr = new java.text.SimpleDateFormat("dd MMM yyyy", new java.util.Locale("id", "ID")).format(new java.util.Date());
+                }
+                
+                // If DB query yielded empty lists (e.g. error/no connection), fallback to parsing the items list
+                if (itemDescs.isEmpty()) {
+                    for (String item : items) {
+                        int idx = item.lastIndexOf(" (Rp ");
+                        String desc = item;
+                        double price = 0;
+                        if (idx != -1) {
+                            desc = item.substring(0, idx).trim();
+                            String prStr = item.substring(idx + 5, item.length() - 1).replaceAll("[^\\d]", "");
+                            try { price = Double.parseDouble(prStr); } catch (Exception ignored) {}
+                        }
+                        itemDescs.add(desc);
+                        itemPrices.add(price);
+                    }
+                }
+                
+                // Instantiate the off-screen InvoiceReceiptPanel
+                InvoiceReceiptPanel receiptPanel = new InvoiceReceiptPanel(
+                    invoiceNumber,
+                    clientName,
+                    projectName,
+                    totalPrice,
+                    itemDescs,
+                    itemPrices,
+                    dateStr
+                );
+                
+                JPanel card = receiptPanel.getInvoiceCard();
+                card.setSize(720, 840);
+                
+                // Recursively layout all elements of the panel
+                card.doLayout();
+                card.validate();
+                
+                // Paint the card onto a BufferedImage
+                BufferedImage img = new BufferedImage(720, 840, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2 = img.createGraphics();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Paint background white
+                g2.setColor(Color.WHITE);
+                g2.fillRect(0, 0, 720, 840);
+                
+                card.paint(g2);
+                g2.dispose();
+                
+                ImageIO.write(img, "png", fileToSave);
                 JOptionPane.showMessageDialog(parent, "Invoice berhasil diunduh ke:\n" + fileToSave.getAbsolutePath(), "Unduh Sukses", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(parent, "Gagal mengunduh invoice: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
     }

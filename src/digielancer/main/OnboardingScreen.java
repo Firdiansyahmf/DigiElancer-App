@@ -515,8 +515,8 @@ public class OnboardingScreen extends JFrame {
                     // Automatically create a default/sample project for this service
                     pstProject.setInt(1, userId);
                     pstProject.setInt(2, serviceId);
-                    pstProject.setString(3, "Exstore Gaming"); 
-                    pstProject.setString(4, "contact@exstore.com");
+                    pstProject.setString(3, regBusinessName + " Client"); 
+                    pstProject.setString(4, regEmail);
                     
                     // Set deadline to 30 days from now
                     java.sql.Date deadlineDate = new java.sql.Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
