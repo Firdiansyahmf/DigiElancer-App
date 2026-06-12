@@ -4,7 +4,9 @@
  */
 package digielancer.main;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import java.lang.Runnable;
+import javax.swing.UIManager;
 
 /**
  *
@@ -13,16 +15,12 @@ import java.lang.Runnable;
 public class DigiElancer {
     public static void main(String[] args) {
         
-        // look feell
+        FlatLightLaf.setup();
+        
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            UIManager.setLookAndFeel( new FlatLightLaf() );
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize LaF" );
         }
         
         // splashh

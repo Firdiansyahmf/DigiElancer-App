@@ -7,13 +7,9 @@ package digielancer.main;
 
 import digielancer.component.Dashboard;
 import digielancer.component.MenuInvoice;
-import digielancer.component.ProjectList;
-<<<<<<< HEAD
+import digielancer.component.ProjectManagement;
 import digielancer.component.settingList;
-
-=======
 import javax.swing.ImageIcon;
->>>>>>> firdi
 /**
  *
  * @author ASUS
@@ -228,8 +224,16 @@ public class Navbar extends javax.swing.JFrame {
     private void jButtonProjectsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonProjectsActionPerformed
         // TODO add your handling code here:
         setActiveMenu(jButtonProjects);
-                
-        switchContent(new ProjectList());
+        
+        int currentUserId = UserSession.getId();
+        java.util.List<digielancer.model.ProjectModel> projects = digielancer.model.ProjectDAO.getProjectsForUser(currentUserId);
+        
+        int firstProjectId = 0;
+        if (projects != null && !projects.isEmpty()) {
+            firstProjectId = projects.get(0).getId();
+        }
+        
+        switchContent(new ProjectManagement(this, firstProjectId));
     }//GEN-LAST:event_jButtonProjectsActionPerformed
 
     private void jButtonInvoicesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonInvoicesActionPerformed
