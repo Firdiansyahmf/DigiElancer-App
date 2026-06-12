@@ -333,6 +333,37 @@ public class InvoicePanel extends javax.swing.JPanel {
         return leftCol;
     }
 
+    private String generateDefaultInvoiceNumber() {
+        String prefix = "INV-" + java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) + "-";
+        int nextNum = 1;
+        int paddingLength = 3; // default padding length (e.g. 001)
+        
+        try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+            String sql = "SELECT invoice_number FROM invoice ORDER BY id DESC LIMIT 1";
+            try (PreparedStatement pst = conn.prepareStatement(sql);
+                 ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    String latestNum = rs.getString("invoice_number");
+                    if (latestNum != null && latestNum.contains("-")) {
+                        String[] parts = latestNum.split("-");
+                        if (parts.length > 0) {
+                            String suffix = parts[parts.length - 1].trim();
+                            try {
+                                nextNum = Integer.parseInt(suffix) + 1;
+                                paddingLength = suffix.length();
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Gagal men-generate nomor nota default: " + e.getMessage());
+        }
+        
+        return prefix + String.format("%0" + paddingLength + "d", nextNum);
+    }
+
     private JPanel createDetailNotaCard() {
         RoundedPanel card = new RoundedPanel(16);
         card.setLayout(new GridBagLayout());
@@ -384,7 +415,7 @@ public class InvoicePanel extends javax.swing.JPanel {
         card.add(lblNota, gbc);
 
         // Nomor Nota Input Field
-        tfNotaNumber = new JTextField("INV-2026-752");
+        tfNotaNumber = new JTextField(generateDefaultInvoiceNumber());
         tfNotaNumber.setFont(getModernFont(Font.PLAIN, 13));
         tfNotaNumber.setPreferredSize(new Dimension(tfNotaNumber.getPreferredSize().width, 42));
         tfNotaNumber.setBackground(new Color(248, 250, 252));

@@ -515,7 +515,7 @@ public class OnboardingScreen extends JFrame {
                     // Automatically create a default/sample project for this service
                     pstProject.setInt(1, userId);
                     pstProject.setInt(2, serviceId);
-                    pstProject.setString(3, regBusinessName + " Client"); 
+                    pstProject.setString(3, regBusinessName ); 
                     pstProject.setString(4, regEmail);
                     
                     // Set deadline to 30 days from now
