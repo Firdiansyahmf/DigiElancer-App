@@ -27,6 +27,7 @@ public class InvoiceReceiptPanel extends javax.swing.JPanel {
 
     // Component references
     private RoundedPanel invoiceCard;
+    private java.awt.Container lastGrandParent = null;
 
     public InvoiceReceiptPanel(String invoiceNumber, String clientName, String projectName, double totalPrice, 
                                List<String> itemDescriptions, List<Double> itemPrices, String generatedDate) {
@@ -754,5 +755,32 @@ public class InvoiceReceiptPanel extends javax.swing.JPanel {
             float brightness = Math.max(0.0f, hsb[2] - 0.08f);
             return Color.getHSBColor(hsb[0], hsb[1], brightness);
         }
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        java.awt.Container parent = this.getParent();
+        if (parent != null) {
+            java.awt.Container grandParent = parent.getParent();
+            if (grandParent instanceof MenuInvoice) {
+                lastGrandParent = grandParent;
+                for (Component comp : grandParent.getComponents()) {
+                    if (comp != parent) {
+                        comp.setVisible(false);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void removeNotify() {
+        if (lastGrandParent != null) {
+            for (Component comp : lastGrandParent.getComponents()) {
+                comp.setVisible(true);
+            }
+        }
+        super.removeNotify();
     }
 }
