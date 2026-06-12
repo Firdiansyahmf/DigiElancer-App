@@ -345,4 +345,9 @@ public class Navbar extends javax.swing.JFrame {
             }
         }
     }
+    
+    public void navigateToInvoices() {
+        setActiveMenu(jButtonInvoices);
+        switchContent(new digielancer.component.MenuInvoice());
+    }
 }

@@ -515,7 +515,14 @@ public class ProjectManagement extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
+        if (mainApp != null) {
+            mainApp.navigateToInvoices();
+        } else {
+            java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
+            if (window instanceof digielancer.main.Navbar) {
+                ((digielancer.main.Navbar) window).navigateToInvoices();
+            }
+        }
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void searchTaskActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchTaskActionPerformed
