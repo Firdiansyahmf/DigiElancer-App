@@ -76,6 +76,26 @@ public class editLayananFrame extends javax.swing.JFrame {
             }
         });
 
+        hargaTextField.setText("Harga (Rp)");
+        hargaTextField.setForeground(java.awt.Color.GRAY);
+        
+        hargaTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (hargaTextField.getText().equals("Harga (Rp)") || hargaTextField.getText().equals("Harga")) {
+                    hargaTextField.setText("");
+                    hargaTextField.setForeground(java.awt.Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (hargaTextField.getText().isEmpty()) {
+                    hargaTextField.setText("Harga (Rp)");
+                    hargaTextField.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+
         simpanButton.addActionListener(e -> simpanLayanan());
     }
 
@@ -121,6 +141,12 @@ public class editLayananFrame extends javax.swing.JFrame {
             return;
         }
 
+        double customPrice = 500000.0;
+        String priceText = hargaTextField.getText().replaceAll("[^\\d]", "");
+        if (!priceText.isEmpty()) {
+            customPrice = Double.parseDouble(priceText);
+        }
+
         try {
             Connection conn = KoneksiDB.configDB();
             conn.setAutoCommit(false);
@@ -132,7 +158,7 @@ public class editLayananFrame extends javax.swing.JFrame {
                     PreparedStatement pstIn = conn.prepareStatement(sqlIn);
                     pstIn.setInt(1, UserSession.getId());
                     pstIn.setString(2, sel);
-                    pstIn.setDouble(3, 500000.0); // Default base price
+                    pstIn.setDouble(3, customPrice);
                     pstIn.executeUpdate();
                 }
             }
@@ -166,6 +192,7 @@ public class editLayananFrame extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         tambahButton = new javax.swing.JButton();
         simpanButton = new javax.swing.JButton();
+        hargaTextField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
@@ -236,6 +263,9 @@ public class editLayananFrame extends javax.swing.JFrame {
         simpanButton.setBorderPainted(false);
         simpanButton.setFocusPainted(false);
 
+        hargaTextField.setText("Harga");
+        hargaTextField.addActionListener(this::hargaTextFieldActionPerformed);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -244,8 +274,10 @@ public class editLayananFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
                         .addComponent(tambahButton))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jToggleButton1)
@@ -285,12 +317,13 @@ public class editLayananFrame extends javax.swing.JFrame {
                     .addComponent(jToggleButton6)
                     .addComponent(jToggleButton7))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tambahButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(hargaTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tambahButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(simpanButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(51, Short.MAX_VALUE))
+                .addContainerGap(48, Short.MAX_VALUE))
         );
 
         pack();
@@ -328,6 +361,10 @@ public class editLayananFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_tambahButtonActionPerformed
 
+    private void hargaTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hargaTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_hargaTextFieldActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -354,6 +391,7 @@ public class editLayananFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField hargaTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JTextField jTextField1;
