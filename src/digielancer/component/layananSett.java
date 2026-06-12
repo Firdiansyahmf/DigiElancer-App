@@ -15,6 +15,87 @@ public class layananSett extends javax.swing.JPanel {
      */
     public layananSett() {
         initComponents();
+        loadDynamicServices();
+    }
+
+    private void loadDynamicServices() {
+        this.removeAll();
+        this.setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
+        this.setBackground(java.awt.Color.WHITE);
+        this.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        jLabel1.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        this.add(jLabel1);
+        this.add(javax.swing.Box.createRigidArea(new java.awt.Dimension(0, 20)));
+
+        javax.swing.JPanel servicesGrid = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
+        servicesGrid.setBackground(java.awt.Color.WHITE);
+        servicesGrid.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+
+        try {
+            java.sql.Connection conn = digielancer.main.KoneksiDB.configDB();
+            String sql = "SELECT id, service_name FROM MAIN_SERVICE WHERE user_id = ?";
+            java.sql.PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, digielancer.main.UserSession.getId());
+            java.sql.ResultSet rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                int serviceId = rs.getInt("id");
+                String sName = rs.getString("service_name");
+                
+                javax.swing.JPanel itemPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 0));
+                itemPanel.setBackground(new java.awt.Color(219, 234, 254));
+                itemPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 15, 8, 15));
+                
+                javax.swing.JLabel lbl = new javax.swing.JLabel(sName);
+                lbl.setFont(new java.awt.Font("Inter", 1, 14));
+                lbl.setForeground(new java.awt.Color(30, 64, 175));
+
+                javax.swing.JButton btnHapus = new javax.swing.JButton("X");
+                btnHapus.setBackground(new java.awt.Color(255, 51, 51));
+                btnHapus.setForeground(java.awt.Color.WHITE);
+                btnHapus.setMargin(new java.awt.Insets(2, 5, 2, 5));
+                btnHapus.setFocusPainted(false);
+                btnHapus.setBorderPainted(false);
+                btnHapus.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+                btnHapus.addActionListener(e -> {
+                    int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
+                        "Apakah Anda yakin ingin menghapus layanan ini? Semua Add-ons terkait juga akan ikut terhapus.", 
+                        "Konfirmasi Hapus", javax.swing.JOptionPane.YES_NO_OPTION);
+                    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                        try {
+                            java.sql.PreparedStatement delAddon = conn.prepareStatement("DELETE FROM ADD_ON WHERE main_service_id=?");
+                            delAddon.setInt(1, serviceId);
+                            delAddon.executeUpdate();
+                            
+                            java.sql.PreparedStatement delMs = conn.prepareStatement("DELETE FROM MAIN_SERVICE WHERE id=?");
+                            delMs.setInt(1, serviceId);
+                            delMs.executeUpdate();
+                            
+                            loadDynamicServices(); // Reload UI
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+                
+                itemPanel.add(lbl);
+                itemPanel.add(btnHapus);
+                servicesGrid.add(itemPanel);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        this.add(servicesGrid);
+        this.add(javax.swing.Box.createRigidArea(new java.awt.Dimension(0, 20)));
+        
+        editButton.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        this.add(editButton);
+        
+        this.revalidate();
+        this.repaint();
     }
 
     /**

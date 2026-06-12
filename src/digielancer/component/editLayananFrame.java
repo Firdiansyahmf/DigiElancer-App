@@ -4,6 +4,15 @@
  */
 package digielancer.component;
 
+import digielancer.main.UserSession;
+import digielancer.main.KoneksiDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author Dwi R.A. Kautsar
@@ -17,6 +26,123 @@ public class editLayananFrame extends javax.swing.JFrame {
      */
     public editLayananFrame() {
         initComponents();
+        setupUI();
+    }
+
+    private List<String> existingServices = new ArrayList<>();
+
+    private void setupUI() {
+        // Fetch existing services
+        try {
+            Connection conn = KoneksiDB.configDB();
+            String sql = "SELECT service_name FROM MAIN_SERVICE WHERE user_id = ?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, UserSession.getId());
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                existingServices.add(rs.getString("service_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Styling toggle buttons
+        styleToggleButton(jToggleButton1, "Pembuatan Web");
+        styleToggleButton(jToggleButton2, "Aplikasi Mobile");
+        styleToggleButton(jToggleButton3, "Desain Grafis");
+        styleToggleButton(jToggleButton4, "Motion Graphic");
+        styleToggleButton(jToggleButton5, "Backend Dev");
+        styleToggleButton(jToggleButton6, "Database Design");
+        styleToggleButton(jToggleButton7, "API Integration");
+
+        // Styling placeholder for textfield
+        jTextField1.setText("Tambah Keahlian Lain...");
+        jTextField1.setForeground(java.awt.Color.GRAY);
+        
+        jTextField1.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (jTextField1.getText().equals("Tambah Keahlian Lain...")) {
+                    jTextField1.setText("");
+                    jTextField1.setForeground(java.awt.Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (jTextField1.getText().isEmpty()) {
+                    jTextField1.setText("Tambah Keahlian Lain...");
+                    jTextField1.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+
+        simpanButton.addActionListener(e -> simpanLayanan());
+    }
+
+    private void styleToggleButton(javax.swing.JToggleButton btn, String text) {
+        btn.setText(text);
+        if (existingServices.contains(text)) {
+            btn.setSelected(true);
+            btn.setBackground(new java.awt.Color(14, 165, 233));
+            btn.setForeground(java.awt.Color.WHITE);
+        } else {
+            btn.setBackground(java.awt.Color.WHITE);
+            btn.setForeground(new java.awt.Color(100, 116, 139));
+        }
+        btn.setFocusPainted(false);
+        btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        btn.addItemListener(e -> {
+            if (btn.isSelected()) {
+                btn.setBackground(new java.awt.Color(14, 165, 233));
+                btn.setForeground(java.awt.Color.WHITE);
+            } else {
+                btn.setBackground(java.awt.Color.WHITE);
+                btn.setForeground(new java.awt.Color(100, 116, 139));
+            }
+        });
+    }
+
+    private void simpanLayanan() {
+        List<String> selectedServices = new ArrayList<>();
+        javax.swing.JToggleButton[] btns = {jToggleButton1, jToggleButton2, jToggleButton3, jToggleButton4, jToggleButton5, jToggleButton6, jToggleButton7};
+        for (javax.swing.JToggleButton btn : btns) {
+            if (btn.isSelected()) selectedServices.add(btn.getText());
+        }
+        
+        // custom service from textfield
+        String custom = jTextField1.getText().trim();
+        if (!custom.isEmpty() && !custom.equals("Tambah Keahlian Lain...")) {
+            selectedServices.add(custom);
+        }
+        
+        if (selectedServices.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Pilih minimal 1 keahlian!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            Connection conn = KoneksiDB.configDB();
+            conn.setAutoCommit(false);
+            
+            // For each selected, if not in existing -> insert
+            for (String sel : selectedServices) {
+                if (!existingServices.contains(sel)) {
+                    String sqlIn = "INSERT INTO MAIN_SERVICE (user_id, service_name, base_price) VALUES (?, ?, ?)";
+                    PreparedStatement pstIn = conn.prepareStatement(sqlIn);
+                    pstIn.setInt(1, UserSession.getId());
+                    pstIn.setString(2, sel);
+                    pstIn.setDouble(3, 500000.0); // Default base price
+                    pstIn.executeUpdate();
+                }
+            }
+            
+            conn.commit();
+            JOptionPane.showMessageDialog(this, "Layanan berhasil disimpan!");
+            this.dispose(); // Close modal
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal menyimpan layanan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
