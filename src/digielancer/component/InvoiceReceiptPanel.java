@@ -197,18 +197,34 @@ public class InvoiceReceiptPanel extends javax.swing.JPanel {
         GridBagConstraints lGbc = new GridBagConstraints();
         
         JPanel logoIcon = new JPanel() {
+            private Image imgLogo;
+
+            {
+                try {
+                    java.net.URL imgURL = getClass().getResource("/digielancer/assets/logo.png");
+                    if (imgURL != null) {
+                        imgLogo = new ImageIcon(imgURL).getImage();
+                    } else {
+                        System.err.println("File logo tidak ditemukan di path yang ditentukan!");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(6, 141, 240));
-                g2.fillOval(0, 0, 24, 24);
-                g2.setColor(new Color(14, 165, 233));
-                g2.fillOval(12, 4, 20, 20);
-                g2.dispose();
+                super.paintComponent(g);
+                if (imgLogo != null) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2.drawImage(imgLogo, 0, 0, getWidth(), getHeight(), this);
+                    g2.dispose();
+                }
             }
         };
-        logoIcon.setPreferredSize(new Dimension(34, 28));
+
+        logoIcon.setPreferredSize(new Dimension(40, 40)); 
         logoIcon.setOpaque(false);
         
         lGbc.gridx = 0;

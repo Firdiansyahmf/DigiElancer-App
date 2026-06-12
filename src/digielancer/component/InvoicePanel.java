@@ -612,28 +612,21 @@ public class InvoicePanel extends javax.swing.JPanel {
         logoSection = new JPanel(new GridBagLayout());
         logoSection.setOpaque(false);
         
-        // Logo icon "De"
-        JPanel logoIcon = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
-                g2.setColor(new Color(6, 141, 240));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                
-                g2.setColor(Color.WHITE);
-                g2.setFont(getModernFont(Font.BOLD, 14));
-                FontMetrics fm = g2.getFontMetrics();
-                String text = "de";
-                int tx = (getWidth() - fm.stringWidth(text)) / 2;
-                int ty = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent() - 1;
-                g2.drawString(text, tx, ty);
-                g2.dispose();
+            JLabel logoIcon = new JLabel();
+            try {
+                // Mengambil file gambar dari folder resource project kamu (misal: src/digielancer/assets/logo.png)
+                java.net.URL imgURL = getClass().getResource("/digielancer/assets/logo.png"); 
+                if (imgURL != null) {
+                    ImageIcon originalIcon = new ImageIcon(imgURL);
+ 
+                    Image scaledImg = originalIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+                    logoIcon.setIcon(new ImageIcon(scaledImg));
+                } else {
+                    System.err.println("File logo tidak ditemukan di path yang ditentukan.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        };
-        logoIcon.setPreferredSize(new Dimension(32, 32));
-        logoIcon.setOpaque(false);
         
         GridBagConstraints lGbc = new GridBagConstraints();
         lGbc.gridx = 0;

@@ -490,6 +490,11 @@ public class OnboardingScreen extends JFrame {
             PreparedStatement pstService = conn.prepareStatement(sqlService, Statement.RETURN_GENERATED_KEYS);
             PreparedStatement pstAddon = conn.prepareStatement(sqlAddon);
 
+            String sqlProject = "INSERT INTO project (user_id, main_service_id, client_name, client_contact, deadline) VALUES (?, ?, ?, ?, ?)";
+            String sqlBoard = "INSERT INTO board (project_id, board_name, description, is_completion_board, position_index) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement pstProject = conn.prepareStatement(sqlProject, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement pstBoard = conn.prepareStatement(sqlBoard);
+
             for (ServiceData s : selectedServices) {
                 pstService.setInt(1, userId);
                 pstService.setString(2, s.name);
@@ -506,6 +511,46 @@ public class OnboardingScreen extends JFrame {
                         pstAddon.addBatch(); 
                     }
                     pstAddon.executeBatch();
+
+                    // Automatically create a default/sample project for this service
+                    pstProject.setInt(1, userId);
+                    pstProject.setInt(2, serviceId);
+                    pstProject.setString(3, "Exstore Gaming"); 
+                    pstProject.setString(4, "contact@exstore.com");
+                    
+                    // Set deadline to 30 days from now
+                    java.sql.Date deadlineDate = new java.sql.Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
+                    pstProject.setDate(5, deadlineDate);
+                    pstProject.executeUpdate();
+                    
+                    ResultSet rsProject = pstProject.getGeneratedKeys();
+                    if (rsProject.next()) {
+                        int projectId = rsProject.getInt(1);
+                        
+                        // Insert standard Kanban boards for this project
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "To-Do");
+                        pstBoard.setString(3, "Tasks that need to be started");
+                        pstBoard.setInt(4, 0); // is_completion_board = false
+                        pstBoard.setInt(5, 1); // position_index = 1
+                        pstBoard.addBatch();
+                        
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "In Progress");
+                        pstBoard.setString(3, "Tasks currently being worked on");
+                        pstBoard.setInt(4, 0); // is_completion_board = false
+                        pstBoard.setInt(5, 2); // position_index = 2
+                        pstBoard.addBatch();
+                        
+                        pstBoard.setInt(1, projectId);
+                        pstBoard.setString(2, "Done");
+                        pstBoard.setString(3, "Completed tasks ready for review");
+                        pstBoard.setInt(4, 1); 
+                        pstBoard.setInt(5, 3); 
+                        pstBoard.addBatch();
+                        
+                        pstBoard.executeBatch();
+                    }
                 }
             }
 
