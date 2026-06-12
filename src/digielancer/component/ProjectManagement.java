@@ -522,20 +522,19 @@ public class ProjectManagement extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_searchTaskActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
         java.awt.Frame parentFrame = (java.awt.Frame) window;
         
         boolean isModal = true;
         int userId = UserSession.getId(); 
             
-        addProject dialog = new addProject(parentFrame, isModal, userId);
+        addProject dialog = new addProject(parentFrame, isModal, userId, 0, this);
         
         dialog.setLocationRelativeTo(parentFrame);
         
         dialog.setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
         // TODO add your handling code here:

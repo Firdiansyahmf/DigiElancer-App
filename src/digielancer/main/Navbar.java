@@ -36,6 +36,9 @@ public class Navbar extends javax.swing.JFrame {
         }
         
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setActiveMenu(jButtonDashboard); 
+        
+        switchContent(new Dashboard());
     }
     
     public class MyForm extends javax.swing.JFrame {
