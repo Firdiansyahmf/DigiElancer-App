@@ -230,6 +230,25 @@ public class InvoicePanel extends javax.swing.JPanel {
         repaint();
     }
 
+    private int getInvoiceCount() {
+        int count = 0;
+        int currentUserId = digielancer.main.UserSession.getId();
+        try (Connection conn = digielancer.main.KoneksiDB.configDB()) {
+            String sql = "SELECT COUNT(*) FROM invoice i JOIN project p ON i.project_id = p.id WHERE p.user_id = ?";
+            try (PreparedStatement pst = conn.prepareStatement(sql)) {
+                pst.setInt(1, currentUserId);
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        count = rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Gagal mendapatkan jumlah invoice: " + e.getMessage());
+        }
+        return count;
+    }
+
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel();
         headerPanel.setOpaque(false);
@@ -265,7 +284,8 @@ public class InvoicePanel extends javax.swing.JPanel {
         RoundedButton btnNota = new RoundedButton("Buat Nota Baru", 16, new Color(6, 141, 240), Color.WHITE);
 
         // Inactive Tab Button: History Invoice
-        RoundedButton btnHistory = new RoundedButton("History Invoice (3)", 16, new Color(241, 245, 249), new Color(74, 85, 101));
+        int historyCount = getInvoiceCount();
+        RoundedButton btnHistory = new RoundedButton("History Invoice (" + historyCount + ")", 16, new Color(241, 245, 249), new Color(74, 85, 101));
         btnHistory.addActionListener(e -> navigateToHistoryInvoicePanel());
 
         tabsContainer.add(btnNota);
