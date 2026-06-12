@@ -15,6 +15,29 @@ public class tentangSett extends javax.swing.JPanel {
      */
     public tentangSett() {
         initComponents();
+        setupLogo();
+    }
+
+    private void setupLogo() {
+        try {
+            java.net.URL imgUrl = getClass().getResource("/digielancer/assets/logo.png");
+            if (imgUrl != null) {
+                java.awt.Image img = new javax.swing.ImageIcon(imgUrl).getImage();
+                java.awt.Image scaledImg = img.getScaledInstance(96, 96, java.awt.Image.SCALE_SMOOTH);
+                jButton1.setIcon(new javax.swing.ImageIcon(scaledImg));
+                jButton1.setText("");
+                jButton1.setBorderPainted(false);
+                jButton1.setContentAreaFilled(false);
+                jButton1.setFocusPainted(false);
+                jButton1.setOpaque(false);
+                // Remove cursor hand since it's just a logo now
+                jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+            } else {
+                System.out.println("Logo image not found at /digielancer/assets/logo.png");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -40,7 +63,9 @@ public class tentangSett extends javax.swing.JPanel {
         jButton1.setBackground(new java.awt.Color(51, 51, 255));
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Logo");
+        jButton1.setMaximumSize(new java.awt.Dimension(96, 96));
         jButton1.setPreferredSize(new java.awt.Dimension(96, 96));
+        jButton1.addActionListener(this::jButton1ActionPerformed);
 
         jLabel1.setFont(new java.awt.Font("Inter", 1, 24)); // NOI18N
         jLabel1.setText("Digi Elancer");
@@ -104,6 +129,10 @@ public class tentangSett extends javax.swing.JPanel {
                 .addContainerGap(54, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
