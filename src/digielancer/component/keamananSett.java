@@ -4,6 +4,13 @@
  */
 package digielancer.component;
 
+import digielancer.main.UserSession;
+import digielancer.main.KoneksiDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author Dwi R.A. Kautsar
@@ -116,7 +123,53 @@ public class keamananSett extends javax.swing.JPanel {
     }//GEN-LAST:event_konfPassTExtActionPerformed
 
     private void updateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateButtonActionPerformed
-        // TODO add your handling code here:
+        String passLama = passLamaText.getText();
+        String passBaru = passBaruText.getText();
+        String konfPass = konfPassTExt.getText();
+
+        if (passLama.isEmpty() || passBaru.isEmpty() || konfPass.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Semua kolom password harus diisi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!passBaru.equals(konfPass)) {
+            JOptionPane.showMessageDialog(this, "Password baru dan konfirmasi tidak cocok!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            Connection conn = KoneksiDB.configDB();
+            
+            // Pengecekan password lama
+            String sqlCheck = "SELECT password_hash FROM USER WHERE id = ?";
+            PreparedStatement pstCheck = conn.prepareStatement(sqlCheck);
+            pstCheck.setInt(1, UserSession.getId());
+            ResultSet rs = pstCheck.executeQuery();
+            
+            if (rs.next()) {
+                String dbPass = rs.getString("password_hash");
+                if (!dbPass.equals(passLama)) {
+                    JOptionPane.showMessageDialog(this, "Password lama salah!", "Peringatan", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Pembaruan password baru
+                String sqlUpdate = "UPDATE USER SET password_hash = ? WHERE id = ?";
+                PreparedStatement pstUpdate = conn.prepareStatement(sqlUpdate);
+                pstUpdate.setString(1, passBaru);
+                pstUpdate.setInt(2, UserSession.getId());
+                
+                int updated = pstUpdate.executeUpdate();
+                if (updated > 0) {
+                    JOptionPane.showMessageDialog(this, "Password berhasil diperbarui!");
+                    passLamaText.setText("");
+                    passBaruText.setText("");
+                    konfPassTExt.setText("");
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_updateButtonActionPerformed
 
 

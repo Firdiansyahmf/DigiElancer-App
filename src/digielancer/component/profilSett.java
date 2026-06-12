@@ -4,6 +4,13 @@
  */
 package digielancer.component;
 
+import digielancer.main.UserSession;
+import digielancer.main.KoneksiDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import javax.swing.JOptionPane;
+import java.awt.Color;
+
 /**
  *
  * @author Dwi R.A. Kautsar
@@ -15,6 +22,16 @@ public class profilSett extends javax.swing.JPanel {
      */
     public profilSett() {
         initComponents();
+        loadUserData();
+    }
+
+    private void loadUserData() {
+        if(UserSession.getId() != 0) {
+            namaTextField.setText(UserSession.getBusinessName());
+            namaTextField.setForeground(Color.BLACK);
+            emailTextField.setText(UserSession.getEmail());
+            emailTextField.setForeground(Color.BLACK);
+        }
     }
 
     /**
@@ -105,7 +122,34 @@ public class profilSett extends javax.swing.JPanel {
     }//GEN-LAST:event_emailTextFieldActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+        // Pengambilan input pengguna
+        String newName = namaTextField.getText().trim();
+        String newEmail = emailTextField.getText().trim();
+        
+        if(newName.isEmpty() || newEmail.isEmpty() || newName.equals("Masukkan Nama Anda") || newEmail.equals("Masukkan Email Anda")) {
+            JOptionPane.showMessageDialog(this, "Nama dan Email tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            // Persiapan koneksi dan query update
+            Connection conn = KoneksiDB.configDB();
+            String sql = "UPDATE USER SET business_name=?, email=? WHERE id=?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, newName);
+            pst.setString(2, newEmail);
+            pst.setInt(3, UserSession.getId());
+            
+            // Eksekusi query
+            int updated = pst.executeUpdate();
+            if(updated > 0) {
+                // Pembaruan sesi lokal jika berhasil
+                UserSession.setSession(UserSession.getId(), newName, newEmail);
+                JOptionPane.showMessageDialog(this, "Profil berhasil diperbarui!");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal memperbarui profil: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
 
